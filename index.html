@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Card Challenge</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* =========================================================================
+   CONFIG NOTE: Gameplay numbers, password and backend URL are set in the
+   <script> CONFIG block near the bottom of this file. Search for "CONFIG".
+   ========================================================================= */
+:root{
+  --bg:#0b0d12; --bg2:#11141c; --panel:#161a24; --panel2:#1c2230;
+  --ink:#f3f5fa; --muted:#9aa3b5; --gold:#e8c66a; --gold2:#c79a3c;
+  --green:#3ad29f; --red:#ff6b6b; --line:rgba(255,255,255,.08);
+  --shadow:0 18px 50px rgba(0,0,0,.55); --radius:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  margin:0; font-family:Georgia,'Times New Roman',Times,serif; color:var(--ink);
+  background:
+    linear-gradient(rgba(8,10,14,.82), rgba(8,10,14,.9)),
+    url("images/background.jpg") center center / cover no-repeat fixed, var(--bg);
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+.script{font-family:'Great Vibes',cursive;font-weight:400;letter-spacing:.5px;}
+.wrap{max-width:1000px;margin:0 auto;padding:22px 18px 60px;}
+
+.screen{display:none;animation:fade .4s ease;}
+.screen.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.center{text-align:center;}
+.title{font-size:clamp(44px,9vw,82px);line-height:1;color:var(--gold);
+  text-shadow:0 2px 0 rgba(0,0,0,.4),0 0 30px rgba(232,198,106,.25);margin:6px 0 2px;}
+.subtitle{color:var(--muted);font-size:15px;margin:0 0 26px;letter-spacing:.3px;}
+.card-panel{background:linear-gradient(180deg,var(--panel),var(--bg2));
+  border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 24px;}
+
+label.field{display:block;text-align:left;font-size:13px;color:var(--muted);
+  margin:14px 0 6px;font-weight:600;letter-spacing:.2px;}
+input[type=text],input[type=tel],input[type=number],textarea,select{
+  width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);
+  background:#0e1118;color:var(--ink);font-size:16px;font-family:inherit;outline:none;}
+input:focus,textarea:focus,select:focus{border-color:var(--gold2);box-shadow:0 0 0 3px rgba(232,198,106,.15);}
+input[type=password]{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);
+  background:#0e1118;color:var(--ink);font-size:16px;font-family:inherit;outline:none;}
+textarea{min-height:90px;resize:vertical;}
+
+.btn{appearance:none;border:0;cursor:pointer;font-family:inherit;font-weight:700;font-size:16px;
+  padding:15px 22px;border-radius:14px;color:#1a1407;
+  background:linear-gradient(180deg,var(--gold),var(--gold2));
+  box-shadow:0 10px 24px rgba(199,154,60,.35);transition:transform .08s ease,filter .15s ease,opacity .2s;}
+.btn:hover{filter:brightness(1.06);}
+.btn:active{transform:translateY(1px) scale(.99);}
+.btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.4);box-shadow:none;}
+.btn.block{width:100%;margin-top:18px;}
+.btn.ghost{background:transparent;color:var(--muted);box-shadow:none;border:1px solid var(--line);font-weight:600;}
+
+.note{font-size:12.5px;color:var(--muted);margin-top:14px;line-height:1.5;}
+.err{color:var(--red);font-size:13px;margin-top:8px;min-height:18px;font-weight:600;}
+
+/* ---------- Survey ---------- */
+.sec{border-top:1px solid var(--line);margin-top:26px;padding-top:18px;}
+.sec:first-of-type{border-top:none;margin-top:8px;}
+.sec h3{color:var(--gold);font-size:19px;margin:0 0 4px;}
+.sec .sechelp{color:var(--muted);font-size:12.5px;margin:0 0 8px;}
+.q{margin:16px 0;}
+.q .qt{font-size:15px;color:#e7eaf2;line-height:1.5;font-weight:600;margin-bottom:8px;}
+.q .qt .rq{color:var(--red);}
+.opts{display:flex;flex-direction:column;gap:8px;}
+.opts.inline{flex-direction:row;flex-wrap:wrap;gap:10px;}
+.opt{display:flex;align-items:center;gap:10px;background:#0e1118;border:1px solid var(--line);
+  border-radius:10px;padding:11px 13px;cursor:pointer;font-size:15px;color:#d7dbe6;}
+.opt:hover{border-color:var(--gold2);}
+.opt input{width:auto;margin:0;accent-color:var(--gold);flex:0 0 auto;}
+.opt.sel{border-color:var(--gold);background:rgba(232,198,106,.08);}
+.likert{display:grid;grid-template-columns:1fr;gap:6px;}
+.likert-row{display:flex;gap:6px;flex-wrap:wrap;}
+.likert-row .opt{flex:1;min-width:44px;justify-content:center;padding:9px 6px;font-weight:700;}
+.likert-ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:2px;}
+.subq{margin:10px 0 0;padding:12px;border:1px dashed var(--line);border-radius:12px;background:rgba(255,255,255,.02);}
+.subq .subt{font-weight:700;color:var(--gold);font-size:14px;margin-bottom:8px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:560px){.grid2{grid-template-columns:1fr;}}
+.progresstiny{font-size:12px;color:var(--muted);text-align:center;margin:2px 0 14px;font-weight:600;}
+
+/* ---------- Instructions ---------- */
+#instr .scrollbox,#debriefbox{
+  text-align:left;max-height:54vh;overflow-y:auto;padding:6px 14px 6px 4px;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:18px 0;scroll-behavior:smooth;}
+#instr h3{color:var(--gold);font-size:18px;margin:18px 0 6px;}
+#instr p,#instr li{color:#d7dbe6;font-size:15px;line-height:1.6;}
+#instr ul{padding-left:20px;margin:6px 0 4px;}
+.mini-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0;}
+.mini{background:#0e1118;border:1px solid var(--line);border-radius:12px;padding:12px 8px;text-align:center;}
+.mini .lt{font-size:22px;font-weight:800;color:var(--gold);}
+.mini .e{color:var(--green);font-weight:700;font-size:13px;margin-top:6px;}
+.mini .l{color:var(--red);font-weight:700;font-size:13px;}
+.scroll-hint{font-size:13px;color:var(--gold);text-align:center;margin-top:4px;animation:pulse 1.6s infinite;}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* ---------- Game HUD ---------- */
+.phasetag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+  padding:5px 12px;border-radius:999px;margin-bottom:12px;}
+.phasetag.practice{background:rgba(106,160,255,.15);color:#9cc0ff;border:1px solid rgba(106,160,255,.4);}
+.phasetag.scored{background:rgba(232,198,106,.15);color:var(--gold);border:1px solid var(--gold2);}
+.hud{display:flex;gap:12px;align-items:stretch;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;}
+.stat{flex:1;min-width:130px;background:linear-gradient(180deg,var(--panel2),var(--panel));
+  border:1px solid var(--line);border-radius:14px;padding:12px 16px;}
+.stat .k{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:700;}
+.stat .v{font-size:26px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums;}
+.stat.bal .v{color:var(--gold);}
+#balanceFlash{transition:color .25s,transform .25s;}
+.progresswrap{height:10px;background:#0e1118;border-radius:999px;overflow:hidden;border:1px solid var(--line);margin-bottom:6px;}
+.progressbar{height:100%;width:0;background:linear-gradient(90deg,var(--gold2),var(--gold));transition:width .35s ease;}
+.progresslabel{font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px;font-weight:600;}
+
+/* ---------- Cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+@media(max-width:640px){.cards{grid-template-columns:repeat(2,1fr);gap:12px;}.hud .stat{min-width:45%;}}
+.deck{position:relative;cursor:pointer;border:none;background:none;padding:0;font-family:inherit;}
+.deck:disabled{cursor:not-allowed;}
+.cardface{aspect-ratio:5/7;border-radius:16px;background:linear-gradient(160deg,#1b1b1f,#000 70%);
+  border:2px solid var(--gold2);
+  box-shadow:0 14px 30px rgba(0,0,0,.55),inset 0 0 0 4px rgba(0,0,0,.6),inset 0 0 0 5px rgba(232,198,106,.25);
+  display:flex;align-items:center;justify-content:center;position:relative;
+  transition:transform .12s ease,box-shadow .2s ease,filter .2s;overflow:hidden;}
+.deck:not(:disabled):hover .cardface{transform:translateY(-6px);box-shadow:0 22px 44px rgba(0,0,0,.6),0 0 26px rgba(232,198,106,.25),inset 0 0 0 5px rgba(232,198,106,.45);}
+.deck:active .cardface{transform:translateY(-2px) scale(.985);}
+.deck:disabled .cardface{filter:grayscale(.5) brightness(.7);}
+.corner{position:absolute;font-weight:800;color:var(--gold);line-height:.9;text-align:center;}
+.corner.tl{top:8px;left:10px;}
+.corner.br{bottom:8px;right:10px;transform:rotate(180deg);}
+.corner .ltr{font-size:20px;}
+.corner .sm{font-size:14px;}
+.suit-big{font-size:clamp(40px,9vw,64px);color:var(--gold);text-shadow:0 0 18px rgba(232,198,106,.35);}
+.deck .meta{margin-top:10px;text-align:center;}
+.deck .meta .nm{font-weight:800;font-size:16px;letter-spacing:1px;color:var(--ink);}
+.deck .meta .row{display:flex;justify-content:center;gap:10px;margin-top:4px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;}
+.deck .meta .win{color:var(--green);}
+.deck .meta .lose{color:var(--red);}
+.toast{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.6);
+  font-weight:900;font-size:clamp(20px,5vw,30px);padding:6px 14px;border-radius:12px;
+  opacity:0;pointer-events:none;font-variant-numeric:tabular-nums;z-index:5;white-space:nowrap;}
+.toast.show{animation:toast 1s ease forwards;}
+.toast.win{color:#04130d;background:var(--green);box-shadow:0 8px 22px rgba(58,210,159,.5);}
+.toast.lose{color:#1c0606;background:var(--red);box-shadow:0 8px 22px rgba(255,107,107,.5);}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+  20%{opacity:1;transform:translate(-50%,-70%) scale(1)}
+  80%{opacity:1;transform:translate(-50%,-95%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-130%) scale(.9)}}
+
+#fx{position:fixed;inset:0;pointer-events:none;z-index:60;}
+#jackpotBanner{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+  flex-direction:column;z-index:70;pointer-events:none;}
+#jackpotBanner.show{display:flex;animation:fade .25s;}
+.jp-text{font-family:'Great Vibes',cursive;font-size:clamp(64px,16vw,150px);color:var(--gold);
+  text-shadow:0 0 40px rgba(232,198,106,.8),0 6px 0 rgba(0,0,0,.4);animation:jpPop .7s cubic-bezier(.2,1.4,.4,1);}
+.jp-sub{font-size:clamp(20px,5vw,34px);font-weight:900;color:#fff;letter-spacing:2px;
+  text-shadow:0 2px 14px rgba(0,0,0,.6);animation:jpPop .7s .08s both cubic-bezier(.2,1.4,.4,1);}
+@keyframes jpPop{0%{transform:scale(.3) rotate(-6deg);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.screenflash{position:fixed;inset:0;background:radial-gradient(circle at 50% 50%,rgba(232,198,106,.5),transparent 60%);
+  z-index:55;pointer-events:none;opacity:0;}
+.screenflash.show{animation:flash .6s ease;}
+@keyframes flash{0%{opacity:0}30%{opacity:1}100%{opacity:0}}
+
+.bigfinal{font-size:clamp(40px,11vw,72px);font-weight:800;color:var(--gold);
+  font-variant-numeric:tabular-nums;text-shadow:0 0 30px rgba(232,198,106,.25);margin:6px 0;}
+.entries{display:inline-block;background:#0e1118;border:1px solid var(--gold2);border-radius:999px;
+  padding:10px 22px;font-weight:800;color:var(--gold);margin:10px 0 4px;font-size:18px;}
+.lockicon{font-size:54px;margin-bottom:6px;}
+
+#debriefbox h3{color:var(--gold);font-size:17px;margin:16px 0 6px;}
+#debriefbox p,#debriefbox li{color:#d7dbe6;font-size:14.5px;line-height:1.6;}
+.paytable{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px;}
+.paytable th,.paytable td{border:1px solid var(--line);padding:7px 9px;text-align:left;color:#d7dbe6;}
+.paytable th{color:var(--gold);background:rgba(232,198,106,.06);}
+.help-box{background:rgba(58,210,159,.06);border:1px solid rgba(58,210,159,.3);border-radius:12px;padding:12px 14px;margin-top:12px;}
+.help-box b{color:var(--green);}
+
+#muteBtn{position:fixed;top:14px;right:14px;z-index:80;background:rgba(0,0,0,.4);border:1px solid var(--line);
+  color:var(--ink);border-radius:50%;width:42px;height:42px;font-size:18px;cursor:pointer;}
+.admin-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.admin-row .btn{flex:1;}
+.statusmsg{font-size:13px;color:var(--green);margin-top:10px;min-height:18px;font-weight:600;}
+.tiny{font-size:11px;color:var(--muted);margin-top:24px;line-height:1.5;}
+a{color:var(--gold);}
+
+#motivBar{position:fixed;left:0;top:64px;width:150px;max-height:82vh;z-index:50;
+  background:rgba(0,0,0,.6);border:1px solid var(--line);border-left:none;
+  border-radius:0 12px 12px 0;display:flex;flex-direction:column;overflow:hidden;}
+#motivBar .hd{font-size:10.5px;font-weight:700;letter-spacing:.4px;color:var(--gold);
+  padding:8px 6px;text-align:center;cursor:pointer;background:rgba(0,0,0,.45);user-select:none;}
+#motivImgs{overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:6px;}
+#motivImgs img{width:100%;border-radius:6px;display:block;}
+#motivBar.collapsed #motivImgs{display:none;}
+@media(max-width:1300px){#motivBar{width:120px;}}
+@media(max-width:760px){#motivBar{top:auto;bottom:0;left:0;right:0;width:100%;max-height:42vh;
+  border-radius:12px 12px 0 0;border-left:1px solid var(--line);}
+  #motivImgs{flex-direction:row;overflow-x:auto;overflow-y:hidden;}
+  #motivImgs img{width:auto;height:90px;}}
+</style>
+</head>
+<body>
+
+<button id="muteBtn" title="Mute / unmute sound">&#128266;</button>
+
+<aside id="motivBar">
+  <div class="hd" id="motivHd">MOTIVATIONAL IMAGES &#9662;</div>
+  <div id="motivImgs"></div>
+</aside>
+<canvas id="fx"></canvas>
+<div class="screenflash" id="flash"></div>
+<div id="jackpotBanner"><div class="jp-text script">Jackpot</div><div class="jp-sub">+1,000 TOKENS!</div></div>
+
+<div class="wrap">
+
+  <!-- ============ SCREEN 0: LOCKED ============ -->
+  <section class="screen" id="locked">
+    <div class="card-panel center">
+      <div class="lockicon">&#128274;</div>
+      <h1 class="title script" style="font-size:clamp(36px,8vw,60px)">Thank you</h1>
+      <p class="subtitle">This study can only be completed once per person.</p>
+      <p style="color:#d7dbe6;font-size:15px;line-height:1.6">Our records show this study has already been completed on this device, or under your name. Your entry has been recorded. Good luck in the lucky draw!</p>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 1: WELCOME / CONSENT ============ -->
+  <section class="screen active" id="welcome">
+    <div class="center">
+      <h1 class="title script">The Card Challenge</h1>
+      <p class="subtitle">A short decision study &middot; survey + card game &middot; lucky-draw entry</p>
+    </div>
+    <div class="card-panel">
+      <p style="color:#d7dbe6;font-size:15px;line-height:1.6;text-align:center;margin:0 0 10px">
+        You will answer a <b>short survey</b>, then play a <b>card game</b> with tokens.
+        Finishing earns you an entry into a draw for a <b style="color:var(--gold)">$30 voucher</b>.
+      </p>
+
+      <div class="sec" style="border-top:none;margin-top:6px;padding-top:4px">
+        <h3>Consent</h3>
+        <p class="sechelp" style="font-size:13.5px;line-height:1.55;color:#c9cfdb">
+          This is a research activity for an Introduction to Psychology project. It studies how people make
+          choices under uncertainty. Taking part is <b>voluntary and anonymous</b>, you may stop at any time,
+          and you will <b>never wager or lose real money</b>. Tokens are points only. Your name and contact
+          details are used only to prevent duplicate entries and to contact you if you win the draw, and are kept
+          confidential by the research team.
+        </p>
+        <label class="opt" style="margin-top:6px"><input type="checkbox" id="consentChk">
+          <span>I am <b>18 years or older</b>, I have read the above, and I agree to take part.</span></label>
+      </div>
+
+      <label class="field" for="pName">Your full name <span style="color:var(--red)">*</span> <span style="font-weight:400">(so we don't count you twice)</span></label>
+      <input type="text" id="pName" autocomplete="off" placeholder="e.g. Jordan Tan" maxlength="60">
+
+      <label class="field">Contact <span style="color:var(--red)">*</span> <span style="font-weight:400">(so we can reach you if you win the draw. Give a phone number, a Telegram handle, or both.)</span></label>
+      <input type="tel" id="pPhone" autocomplete="off" placeholder="Phone number, e.g. 9123 4567" maxlength="30">
+      <input type="text" id="pTelegram" autocomplete="off" placeholder="Telegram handle, e.g. @jordantan" maxlength="40" style="margin-top:10px">
+
+      <label class="field" for="pId">Participant code <span style="font-weight:400">(optional)</span></label>
+      <input type="text" id="pId" autocomplete="off" placeholder="Leave blank if none" maxlength="40">
+
+      <div class="err" id="welcomeErr"></div>
+      <button class="btn block" id="toSurvey">Continue to survey</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 2: SURVEY ============ -->
+  <section class="screen" id="survey">
+    <div class="card-panel">
+      <h1 class="title script center" style="font-size:clamp(30px,6vw,48px)">A few questions first</h1>
+      <p class="progresstiny">Please answer honestly. There are no right or wrong answers. Questions marked <span style="color:var(--red)">*</span> are required.</p>
+      <form id="surveyForm" autocomplete="off"><!-- survey injected by JS --></form>
+      <div class="err" id="surveyErr"></div>
+      <button class="btn block" id="toInstr">Submit answers &amp; continue</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 3: INSTRUCTIONS ============ -->
+  <section class="screen" id="instr">
+    <div class="card-panel">
+      <h1 class="title script center" style="font-size:clamp(34px,7vw,56px)">How to play</h1>
+      <div class="scrollbox" id="scrollbox">
+        <p>Welcome! This part is a simple game about <b>choices</b>. Please read everything below. The <b>Begin</b> button unlocks once you have scrolled to the end.</p>
+        <h3>The goal</h3>
+        <p>You start with a pot of <b>2,500 tokens</b>. On each turn you pick <b>one of four cards</b>: <b>A, B, C, or D</b>. Each card either <b>adds tokens</b> to your pot or <b>takes some away</b>. Try to finish with as many tokens as possible.</p>
+        <h3>Safer vs riskier cards</h3>
+        <p>Cards <b>A and B</b> are generally <b>safer</b>, giving smaller, steadier results. Cards <b>C and D</b> are <b>riskier</b>, with bigger possible wins but a higher chance of loss. The exact odds are not shown.</p>
+        <div class="mini-cards">
+          <div class="mini"><div class="lt">A &hearts;</div><div class="e">+50</div><div class="l">&minus;50</div></div>
+          <div class="mini"><div class="lt">B &spades;</div><div class="e">+120</div><div class="l">&minus;100</div></div>
+          <div class="mini"><div class="lt">C &diams;</div><div class="e">+300</div><div class="l">&minus;150</div></div>
+          <div class="mini"><div class="lt">D &clubs;</div><div class="e">+1000</div><div class="l">&minus;150</div></div>
+        </div>
+        <p>The numbers under each card show how much you could <b style="color:var(--green)">win</b> or <b style="color:var(--red)">lose</b> on that card. How <i>often</i> each card wins is for you to figure out as you play.</p>
+        <h3>Practice, then the real game</h3>
+        <p>First you get a <b>short practice round</b> to try the cards out, and it does <b>not</b> count. After that, your tokens reset to 2,500 and the <b>real game of 50 turns</b> begins. A bar at the top shows how many turns you have left.</p>
+        <h3>Your reward</h3>
+        <p>Completing the study gives you <b>1 lucky-draw entry</b>. Doing well in the game can earn up to <b>3 bonus entries</b> (4 max), so it is worth trying to finish with as many tokens as you can.</p>
+        <h3>A few notes</h3>
+        <ul>
+          <li>Just choose what feels best to you.</li>
+          <li>You can only take part <b>once</b>.</li>
+          <li>When you finish, your result is saved automatically.</li>
+        </ul>
+        <p style="color:var(--gold);font-weight:700">That's everything. Scroll a touch more and the button below will light up. Good luck!</p>
+        <div id="scrollEnd" style="height:1px"></div>
+      </div>
+      <div class="scroll-hint" id="scrollHint">&#8595; Scroll down to read it all &#8595;</div>
+      <button class="btn block" id="beginBtn" disabled>I have read and understood: Start practice</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 4: GAME (practice + scored) ============ -->
+  <section class="screen" id="game">
+    <div class="center"><span class="phasetag practice" id="phaseTag">Practice round</span></div>
+    <div class="hud">
+      <div class="stat bal"><div class="k">Your tokens</div><div class="v" id="balanceFlash">0</div></div>
+      <div class="stat"><div class="k">Wins</div><div class="v" style="color:var(--green)" id="winCount">0</div></div>
+      <div class="stat"><div class="k">Losses</div><div class="v" style="color:var(--red)" id="lossCount">0</div></div>
+    </div>
+    <div class="progresswrap"><div class="progressbar" id="progressbar"></div></div>
+    <div class="progresslabel" id="progressLabel">Turn 1</div>
+    <div class="cards" id="cards"><!-- cards injected by JS --></div>
+  </section>
+
+  <!-- ============ SCREEN 5: PRACTICE DONE ============ -->
+  <section class="screen" id="practiceDone">
+    <div class="card-panel center">
+      <h1 class="title script" style="font-size:clamp(34px,7vw,56px)">Practice complete</h1>
+      <p class="subtitle">Now for the real thing.</p>
+      <p style="color:#d7dbe6;font-size:15px;line-height:1.6">Your tokens now reset to <b style="color:var(--gold)">2,500</b>. The next <b>50 turns count</b>. They decide your final score and your bonus lucky-draw entries. Play to win!</p>
+      <button class="btn block" id="startScoredBtn">Start the real game</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 6: POST-TASK QUESTIONS ============ -->
+  <section class="screen" id="posttask">
+    <div class="card-panel">
+      <h1 class="title script center" style="font-size:clamp(30px,6vw,48px)">Almost done</h1>
+      <p class="progresstiny">A few quick thoughts about the game you just played.</p>
+      <form id="postForm"><!-- injected by JS --></form>
+      <div class="err" id="postErr"></div>
+      <button class="btn block" id="toDebrief">See my result</button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 7: DEBRIEF + END ============ -->
+  <section class="screen" id="end">
+    <div class="card-panel center">
+      <h1 class="title script" style="font-size:clamp(34px,7vw,56px)">All done!</h1>
+      <p class="subtitle">Here's how you finished.</p>
+      <div class="bigfinal" id="finalBalance">0</div>
+      <div class="entries" id="entries">0 lucky-draw entries</div>
+      <p style="color:#d7dbe6;font-size:15px;line-height:1.6;margin-top:14px" id="endMsg"></p>
+
+      <div id="debriefbox">
+        <h3>What this study was really about</h3>
+        <p>Thank you for taking part. This study looked at <b>decision-making under uncertainty</b>. The four cards had <b>fixed hidden probabilities</b>. Cards A and B were the safer choices; C and D were riskier. Card <b>D</b> offered a rare huge payout but had a <b>negative expected value</b>, so on average it <i>loses</i> tokens despite the tempting +1,000 jackpot.</p>
+        <table class="paytable">
+          <tr><th>Card</th><th>Real odds</th><th>Avg. per turn</th><th>Meaning</th></tr>
+          <tr><td>A &hearts;</td><td>80% win +50, else &minus;50</td><td>+30</td><td>Safe / best</td></tr>
+          <tr><td>B &spades;</td><td>50% win +120, else &minus;100</td><td>+10</td><td>Balanced</td></tr>
+          <tr><td>C &diams;</td><td>30% win +300, else &minus;150</td><td>&minus;15</td><td>Risky</td></tr>
+          <tr><td>D &clubs;</td><td>10% win +1000, else &minus;150</td><td>&minus;35</td><td>Jackpot / gacha-like</td></tr>
+        </table>
+        <p>We are exploring whether people who have had more exposure to <b>gambling, gacha games, and loot boxes</b> show more gambling-like patterns: more risk-taking, more "chasing" losses, and a stronger pull toward jackpot-style rewards.</p>
+        <p>The game was played <b>for points only</b>. You did not gamble or lose any real money. Also remember: in fixed-probability games a win is <b>not "due"</b> after a run of losses. Each turn is independent.</p>
+        <div class="help-box">
+          <b>If you ever feel concerned about your own gaming or spending:</b> support is available. In Singapore you can call the <b>National Problem Gambling Helpline 1800-6-668-668</b> (free, 24h), or reach out to your <b>university counselling service</b>. Elsewhere, contact your local responsible-gambling service.
+        </div>
+      </div>
+
+      <div class="statusmsg" id="submitStatus">Saving your result&hellip;</div>
+      <button class="btn block" id="finishClose" style="margin-top:22px">Finish &amp; close</button>
+
+      <details style="margin-top:26px;text-align:left">
+        <summary style="cursor:pointer;color:var(--muted);font-size:13px;font-weight:600">Researcher access</summary>
+        <label class="field" for="adminPass">Enter password to export local backup data</label>
+        <input type="password" id="adminPass" placeholder="Password">
+        <div class="admin-row">
+          <button class="btn ghost" id="adminCsv">Download CSV</button>
+          <button class="btn ghost" id="adminJson">Download JSON</button>
+        </div>
+        <button class="btn ghost" id="adminResend" style="width:100%;margin-top:10px">Re-send this session to email</button>
+        <div class="statusmsg" id="adminStatus"></div>
+        <p class="tiny">This downloads only the sessions stored on <b>this device</b> as a backup. Every finished session is also emailed to the research team automatically.</p>
+      </details>
+    </div>
+  </section>
+
+  <p class="tiny center">Research activity &middot; Introduction to Psychology &middot; All data kept confidential.</p>
+</div>
+
+<script>
+/* =========================================================================
+   ============================  CONFIG  ===================================
+   Edit the values in this block, then save the file.
+   ========================================================================= */
+const CONFIG = {
+  startingBalance : 2500,     // tokens each player starts with (proposal: 2,500)
+  practiceTrials  : 5,        // unscored warm-up turns
+  maxClicks       : 50,       // scored turns
+  adminPassword   : "gambling2026_!",   // <-- CHANGE THIS for the local CSV/JSON export.
+  researcherEmail : "daryl6657@gmail.com",
+  // Paste your Google Apps Script Web App URL between the quotes (see SETUP_GUIDE).
+  backendUrl      : "https://script.google.com/macros/s/AKfycbyQFDdXZbSFqvHfWUXHvLuiCNgLIBxV9CRrpPWrNPxnUNZdZP5xZ4Fx2I25x7W42z5h/exec",
+  lockDeviceAfterPlay : true
+};
+
+/* Four decks. Probabilities are HIDDEN from players. Match the proposal exactly:
+     A: .80*(+50) + .20*(-50)   = +30   (safe / best)
+     B: .50*(+120)+ .50*(-100)  = +10   (balanced)
+     C: .30*(+300)+ .70*(-150)  = -15   (risky)
+     D: .10*(+1000)+.90*(-150)  = -35   (jackpot / gacha trap)  */
+const DECKS = {
+  A:{ suit:"♥", win:50,   loss:50,  pWin:0.80 },  // hearts
+  B:{ suit:"♠", win:120,  loss:100, pWin:0.50 },  // spades
+  C:{ suit:"♦", win:300,  loss:150, pWin:0.30 },  // diamonds
+  D:{ suit:"♣", win:1000, loss:150, pWin:0.10 }   // clubs
+};
+const DECK_ORDER = ["A","B","C","D"];
+const RISKY = {A:false,B:false,C:true,D:true};   // C or D = "risky" choice
+/* ===================  END CONFIG (edit nothing below) =================== */
+
+/* ---------------- Scoring maps ---------------- */
+const FREQ_SCORE  = {rarely:1, monthly:2, weekly:3, daily:4};
+const SPEND_SCORE = {"$0":0, "under10":1, "10to49":2, "50to199":3, "200plus":4};
+const GAMBLING_ACTS = ["sports","casino","lottery","online"];
+const GACHA_ACTS    = ["gacha","lootbox","blindbox"];
+
+/* ---------------- Survey definition ---------------- */
+const ACTIVITIES = [
+  {id:"sports",   label:"Sports betting"},
+  {id:"casino",   label:"Casino games"},
+  {id:"lottery",  label:"Lottery / scratch cards"},
+  {id:"online",   label:"Online gambling"},
+  {id:"gacha",    label:"Gacha mobile games"},
+  {id:"lootbox",  label:"Loot boxes in video games"},
+  {id:"blindbox", label:"Blind boxes"}
+];
+const SPEND_OPTS = [
+  {v:"$0",label:"$0"},{v:"under10",label:"Under $10"},{v:"10to49",label:"$10–49"},
+  {v:"50to199",label:"$50–199"},{v:"200plus",label:"$200 or more"}
+];
+const PGSI_ITEMS = [
+  "Bet more than you could really afford to lose",
+  "Needed to gamble with larger amounts of money to get the same feeling of excitement",
+  "Went back another day to try to win back the money you lost",
+  "Borrowed money or sold anything to get money to gamble",
+  "Felt that you might have a problem with gambling",
+  "Gambling has caused you any health problems, including stress or anxiety",
+  "People have criticised your betting, or told you that you had a gambling problem",
+  "Gambling has caused any financial problems for you or your household",
+  "Felt guilty about the way you gamble or what happens when you gamble"
+];
+const PGSI_SCALE = [{v:0,label:"Never"},{v:1,label:"Sometimes"},{v:2,label:"Most of the time"},{v:3,label:"Almost always"}];
+const DISTORTION_ITEMS = [
+  {id:"cd_fallacy", text:"After a run of losses, a win is more likely to come."},
+  {id:"cd_luck",    text:"I can sense when my luck is about to change."},
+  {id:"cd_control", text:"I have strategies that increase my chances of winning in games of chance."},
+  {id:"cd_chase",   text:"If I keep going, I will eventually win back what I lost."},
+  {id:"cd_nearmiss",text:"When I almost win, it makes me want to try again."}
+];
+const DECISION_ITEMS = [
+  {id:"dt_chase",   text:"After losing, I feel tempted to continue in order to recover what I lost."},
+  {id:"dt_risk",    text:"I enjoy taking risks when there is a chance of a large reward."},
+  {id:"dt_averse",  text:"I prefer small guaranteed rewards over larger uncertain rewards."},
+  {id:"dt_prob",    text:"I am confident in understanding odds and probabilities."},
+  {id:"dt_gaming",  text:"I am experienced with video games in general."},
+  {id:"dt_finance", text:"I currently feel financially stressed."},
+  {id:"dt_sunk",    text:"If I have already spent time or money on something, I feel motivated to continue until I get a good outcome."}
+];
+
+/* ---------------- Helpers ---------------- */
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function show(screenId){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(screenId).classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+function fmt(n){ return Number(n).toLocaleString('en-US'); }
+function norm(name){ return name.trim().toLowerCase().replace(/\s+/g,' '); }
+function radioRow(name,text,scaleArr){
+  let h='<div class="q"><div class="qt">'+text+' <span class="rq">*</span></div><div class="likert">';
+  h+='<div class="likert-row">';
+  scaleArr.forEach(o=>{ h+='<label class="opt"><input type="radio" name="'+name+'" value="'+o.v+'"><span>'+o.label+'</span></label>'; });
+  h+='</div></div></div>';
+  return h;
+}
+function likertNum(name,text,min,max,lowLbl,highLbl){
+  let h='<div class="q"><div class="qt">'+text+' <span class="rq">*</span></div><div class="likert"><div class="likert-row">';
+  for(let i=min;i<=max;i++){ h+='<label class="opt"><input type="radio" name="'+name+'" value="'+i+'"><span>'+i+'</span></label>'; }
+  h+='</div><div class="likert-ends"><span>'+lowLbl+'</span><span>'+highLbl+'</span></div></div></div>';
+  return h;
+}
+
+/* ---------------- Build the survey ---------------- */
+function buildSurvey(){
+  const f=$('surveyForm'); let h='';
+
+  // 1. Demographics
+  h+='<div class="sec"><h3>1. About you</h3>';
+  h+='<div class="q"><div class="qt">How old are you? <span class="rq">*</span></div>'
+   + '<input type="number" id="q_age" min="18" max="100" placeholder="Age in years"></div>';
+  h+='<div class="q"><div class="qt">What is your gender? <span class="rq">*</span></div><div class="opts inline">';
+  ["Male","Female","Non-binary","Prefer not to say"].forEach(g=>{
+    h+='<label class="opt"><input type="radio" name="q_gender" value="'+g+'"><span>'+g+'</span></label>'; });
+  h+='</div></div>';
+  h+='<div class="q"><div class="qt">Current level of education <span class="rq">*</span></div><div class="opts inline">';
+  ["High school","Undergraduate","Postgraduate","Other"].forEach(g=>{
+    h+='<label class="opt"><input type="radio" name="q_edu" value="'+g+'"><span>'+g+'</span></label>'; });
+  h+='</div></div></div>';
+
+  // 2. Exposure
+  h+='<div class="sec"><h3>2. Randomised-reward activities</h3>'
+   + '<p class="sechelp">In the past 12 months, which of these have you taken part in? Select all that apply.</p>';
+  h+='<div class="q"><div class="opts">';
+  ACTIVITIES.forEach(a=>{
+    h+='<label class="opt"><input type="checkbox" class="actchk" data-act="'+a.id+'" value="'+a.id+'"><span>'+a.label+'</span></label>'; });
+  h+='<label class="opt"><input type="checkbox" id="act_none"><span>None of these</span></label>';
+  h+='</div></div>';
+  h+='<div id="actDetails"></div>';
+  h+='<div class="q"><div class="qt">For the activity you have done longest, how long has that been?</div><div class="opts inline">';
+  ["Less than 6 months","6 months–1 year","1–3 years","More than 3 years","Not applicable"].forEach(g=>{
+    h+='<label class="opt"><input type="radio" name="q_duration" value="'+g+'"><span>'+g+'</span></label>'; });
+  h+='</div></div></div>';
+
+  // 3. PGSI
+  h+='<div class="sec"><h3>3. Gambling experiences (PGSI)</h3>'
+   + '<p class="sechelp">Thinking about the last 12 months, how often has each of the following happened? If you do not gamble, answer "Never".</p>';
+  PGSI_ITEMS.forEach((it,i)=>{ h+=radioRow('pgsi_'+i, (i+1)+'. '+it, PGSI_SCALE); });
+  h+='</div>';
+
+  // 4. Gacha / loot-box engagement
+  h+='<div class="sec"><h3>4. Gacha &amp; loot-box engagement</h3>';
+  h+='<div class="q"><div class="qt">How many gacha or loot-box games do you currently play? <span class="rq">*</span></div>'
+   + '<input type="number" id="q_gachacount" min="0" max="99" placeholder="0 if none"></div>';
+  h+='<div class="q"><div class="qt">Have you ever paid real money for pulls, boxes, or in-game items? <span class="rq">*</span></div><div class="opts inline">';
+  ["Yes","No"].forEach(g=>{ h+='<label class="opt"><input type="radio" name="q_paid" value="'+g+'"><span>'+g+'</span></label>'; });
+  h+='</div></div>';
+  h+='<div class="q"><div class="qt">In a typical month, how much do you spend on gacha pulls, loot boxes, or similar? <span class="rq">*</span></div><div class="opts inline">';
+  SPEND_OPTS.forEach(o=>{ h+='<label class="opt"><input type="radio" name="q_gachaspend" value="'+o.v+'"><span>'+o.label+'</span></label>'; });
+  h+='</div></div>';
+  h+='<div class="q"><div class="qt">Have you ever spent more on pulls or boxes than you intended to? <span class="rq">*</span></div><div class="opts inline">';
+  ["Never","Rarely","Sometimes","Often","Very often"].forEach(g=>{ h+='<label class="opt"><input type="radio" name="q_overspend" value="'+g+'"><span>'+g+'</span></label>'; });
+  h+='</div></div>';
+  h+=likertNum('q_keeppull','I keep pulling or opening boxes until I get the item I want.',1,7,'Strongly disagree','Strongly agree');
+  h+='<div class="q"><div class="qt">Biggest amount you have spent in a single day/session on gacha, loot boxes, or similar? <span class="rq">*</span></div><div class="opts inline">';
+  SPEND_OPTS.concat([{v:"na",label:"Prefer not to say"}]).forEach(o=>{ h+='<label class="opt"><input type="radio" name="q_bigspend" value="'+o.v+'"><span>'+o.label+'</span></label>'; });
+  h+='</div></div></div>';
+
+  // 5. Probability knowledge
+  h+='<div class="sec"><h3>5. Probability</h3>';
+  h+='<div class="q"><div class="qt">If a game gives a 1% chance of success on each try, about how many tries are needed on average for one success? <span class="rq">*</span></div>'
+   + '<input type="number" id="q_prob1" min="0" max="100000" placeholder="Your best estimate"></div>';
+  h+='<div class="q"><div class="qt">In a game with a fixed 10% chance of winning each try, you have just lost 9 times in a row. On the next try, the chance of winning is: <span class="rq">*</span></div><div class="opts">';
+  [["higher","Higher than 10%"],["exact","Exactly 10%"],["lower","Lower than 10%"]].forEach(o=>{
+    h+='<label class="opt"><input type="radio" name="q_prob2" value="'+o[0]+'"><span>'+o[1]+'</span></label>'; });
+  h+='</div></div>';
+  h+='<div class="q"><div class="qt">A button has a 50% chance to win 100 tokens and a 50% chance to lose 150 tokens. On average, is this good or bad in the long run? <span class="rq">*</span></div><div class="opts inline">';
+  [["good","Good"],["bad","Bad"],["notsure","Not sure"]].forEach(o=>{
+    h+='<label class="opt"><input type="radio" name="q_prob3" value="'+o[0]+'"><span>'+o[1]+'</span></label>'; });
+  h+='</div></div></div>';
+
+  // 6. Cognitive distortions
+  h+='<div class="sec"><h3>6. Beliefs about luck and chance</h3>'
+   + '<p class="sechelp">How much do you agree with each statement? 1 = strongly disagree, 7 = strongly agree.</p>';
+  DISTORTION_ITEMS.forEach(it=>{ h+=likertNum(it.id,it.text,1,7,'Strongly disagree','Strongly agree'); });
+  h+='</div>';
+
+  // 7. Decision tendencies
+  h+='<div class="sec"><h3>7. How you tend to decide</h3>'
+   + '<p class="sechelp">How much do you agree with each statement? 1 = strongly disagree, 5 = strongly agree.</p>';
+  DECISION_ITEMS.forEach(it=>{ h+=likertNum(it.id,it.text,1,5,'Strongly disagree','Strongly agree'); });
+  h+='</div>';
+
+  f.innerHTML=h;
+  wireSurveyInteractions();
+}
+
+function wireSurveyInteractions(){
+  // highlight selected option
+  $('surveyForm').addEventListener('change',e=>{
+    const inp=e.target;
+    if(inp.type==='radio'){
+      document.getElementsByName(inp.name).forEach(r=>r.closest('.opt')&&r.closest('.opt').classList.toggle('sel',r.checked));
+    } else if(inp.type==='checkbox' && inp.closest('.opt')){
+      inp.closest('.opt').classList.toggle('sel',inp.checked);
+    }
+  });
+  // activity checklist -> reveal per-activity freq + spend
+  const none=$('act_none');
+  document.querySelectorAll('.actchk').forEach(chk=>{
+    chk.addEventListener('change',()=>{ if(chk.checked && none) none.checked=false, none.closest('.opt').classList.remove('sel'); renderActDetails(); });
+  });
+  if(none) none.addEventListener('change',()=>{
+    if(none.checked){ document.querySelectorAll('.actchk').forEach(c=>{c.checked=false;c.closest('.opt').classList.remove('sel');}); renderActDetails(); }
+  });
+}
+function renderActDetails(){
+  const box=$('actDetails'); let h='';
+  ACTIVITIES.forEach(a=>{
+    const chk=document.querySelector('.actchk[data-act="'+a.id+'"]');
+    if(chk && chk.checked){
+      h+='<div class="subq"><div class="subt">'+a.label+'</div><div class="grid2">';
+      h+='<div><label class="field" style="margin-top:0">How often?</label><select name="freq_'+a.id+'">'
+        +'<option value="">Choose…</option><option value="rarely">Rarely</option><option value="monthly">Monthly</option>'
+        +'<option value="weekly">Weekly</option><option value="daily">Daily</option></select></div>';
+      h+='<div><label class="field" style="margin-top:0">Typical monthly spend?</label><select name="spend_'+a.id+'">'
+        +'<option value="">Choose…</option>';
+      SPEND_OPTS.forEach(o=>{ h+='<option value="'+o.v+'">'+o.label+'</option>'; });
+      h+='</select></div></div></div>';
+    }
+  });
+  box.innerHTML=h;
+}
+
+/* ---------------- Read + validate survey ---------------- */
+function radioVal(name){ const el=document.querySelector('input[name="'+name+'"]:checked'); return el?el.value:null; }
+function collectSurvey(){
+  const errs=[];
+  const s={};
+  // demographics
+  s.age=$('q_age').value.trim();
+  if(!s.age||+s.age<18||+s.age>100) errs.push('Please enter a valid age (18 or older).');
+  s.gender=radioVal('q_gender'); if(!s.gender) errs.push('Please select your gender.');
+  s.education=radioVal('q_edu'); if(!s.education) errs.push('Please select your education level.');
+
+  // exposure
+  const acts=[...document.querySelectorAll('.actchk:checked')].map(c=>c.dataset.act);
+  s.activities=acts.join('|');
+  const noneChecked=$('act_none').checked;
+  if(acts.length===0 && !noneChecked) errs.push('Please select your activities (or "None of these").');
+  ACTIVITIES.forEach(a=>{
+    const sel=acts.includes(a.id);
+    const fEl=document.querySelector('select[name="freq_'+a.id+'"]');
+    const spEl=document.querySelector('select[name="spend_'+a.id+'"]');
+    const fv=sel&&fEl?fEl.value:'';
+    const sv=sel&&spEl?spEl.value:'';
+    if(sel && (!fv||!sv)) errs.push('Please fill frequency and spend for '+a.label+'.');
+    s['freq_'+a.id]=fv; s['spend_'+a.id]=sv;
+  });
+  s.duration=radioVal('q_duration')||'';
+
+  // PGSI
+  let pgsiTotal=0, pgsiComplete=true;
+  PGSI_ITEMS.forEach((it,i)=>{ const v=radioVal('pgsi_'+i); if(v===null){pgsiComplete=false;} else {s['pgsi_'+i]=+v; pgsiTotal+=+v;} });
+  if(!pgsiComplete) errs.push('Please answer all 9 gambling-experience (PGSI) items.');
+  s.pgsiTotal=pgsiComplete?pgsiTotal:'';
+
+  // gacha
+  s.gachaCount=$('q_gachacount').value.trim(); if(s.gachaCount===''||+s.gachaCount<0) errs.push('Please enter how many gacha/loot-box games you play (0 if none).');
+  s.paidReal=radioVal('q_paid'); if(!s.paidReal) errs.push('Please answer whether you have paid real money for pulls/boxes.');
+  s.gachaSpend=radioVal('q_gachaspend'); if(!s.gachaSpend) errs.push('Please answer your typical monthly gacha/loot-box spend.');
+  s.overspend=radioVal('q_overspend'); if(!s.overspend) errs.push('Please answer the "spent more than intended" question.');
+  s.keepPull=radioVal('q_keeppull'); if(!s.keepPull) errs.push('Please answer the "keep pulling until I get the item" question.'); else s.keepPull=+s.keepPull;
+  s.biggestSpend=radioVal('q_bigspend'); if(!s.biggestSpend) errs.push('Please answer the biggest single-session spend question.');
+
+  // probability
+  s.prob1=$('q_prob1').value.trim(); if(s.prob1==='') errs.push('Please answer the 1% chance question.');
+  s.prob2=radioVal('q_prob2'); if(!s.prob2) errs.push('Please answer the "lost 9 times" question.');
+  s.prob3=radioVal('q_prob3'); if(!s.prob3) errs.push('Please answer the good/bad option question.');
+
+  // distortions
+  let distSum=0, distDone=true;
+  DISTORTION_ITEMS.forEach(it=>{ const v=radioVal(it.id); if(v===null)distDone=false; else {s[it.id]=+v; distSum+=+v;} });
+  if(!distDone) errs.push('Please answer all 5 belief statements (section 6).');
+  s.distortionMean=distDone?+(distSum/DISTORTION_ITEMS.length).toFixed(3):'';
+
+  // decision tendencies
+  let dtDone=true;
+  DECISION_ITEMS.forEach(it=>{ const v=radioVal(it.id); if(v===null)dtDone=false; else s[it.id]=+v; });
+  if(!dtDone) errs.push('Please answer all 7 statements in section 7.');
+
+  // ---- computed exposure scores ----
+  function actScore(a){ const f=FREQ_SCORE[s['freq_'+a]]||0; const sp=SPEND_SCORE[s['spend_'+a]]||0; return f+sp; }
+  s.gamblingExposureScore = GAMBLING_ACTS.reduce((t,a)=>t+actScore(a),0);
+  s.gachaExposureScore     = GACHA_ACTS.reduce((t,a)=>t+actScore(a),0);
+  s.totalExposureScore     = s.gamblingExposureScore + s.gachaExposureScore;
+  // probability knowledge correct count
+  let pk=0;
+  if(s.prob1!=='' && +s.prob1>=80 && +s.prob1<=120) pk++;
+  if(s.prob2==='exact') pk++;
+  if(s.prob3==='bad') pk++;
+  s.probabilityCorrect=pk;
+
+  return {ok:errs.length===0, errs, data:s};
+}
+
+/* ---------------- Post-task questions ---------------- */
+function buildPostTask(){
+  const f=$('postForm'); let h='';
+  const cardQ=(name,text)=>{
+    let s='<div class="q"><div class="qt">'+text+' <span class="rq">*</span></div><div class="opts inline">';
+    DECK_ORDER.forEach(l=>{ s+='<label class="opt"><input type="radio" name="'+name+'" value="'+l+'"><span>Card '+l+'</span></label>'; });
+    return s+'</div></div>';
+  };
+  h+=cardQ('pt_exciting','Which card felt most exciting?');
+  h+=cardQ('pt_attractive','Which card felt most attractive to pick?');
+  h+=cardQ('pt_riskiest','Which card felt the riskiest?');
+  h+='<div class="q"><div class="qt">In a sentence, what strategy did you use? <span style="font-weight:400;color:var(--muted)">(optional)</span></div>'
+   + '<textarea id="pt_strategy" maxlength="500" placeholder="e.g. I stuck with the cards that paid me back"></textarea></div>';
+  f.innerHTML=h;
+  f.addEventListener('change',e=>{ const inp=e.target; if(inp.type==='radio'){
+    document.getElementsByName(inp.name).forEach(r=>r.closest('.opt')&&r.closest('.opt').classList.toggle('sel',r.checked)); }});
+}
+function collectPostTask(){
+  const errs=[];
+  const p={
+    postExciting:radioVal('pt_exciting'),
+    postAttractive:radioVal('pt_attractive'),
+    postRiskiest:radioVal('pt_riskiest'),
+    postStrategy:$('pt_strategy').value.trim()
+  };
+  if(!p.postExciting||!p.postAttractive||!p.postRiskiest) errs.push('Please answer the three card questions.');
+  return {ok:errs.length===0, errs, data:p};
+}
+
+/* ---------------- Sound (Web Audio, no files) ---------------- */
+let audioCtx=null, muted=false;
+function ac(){ if(!audioCtx){ try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } return audioCtx; }
+function beep(freq,dur,type,vol,delay){
+  if(muted) return; const c=ac(); if(!c) return;
+  const t=c.currentTime+(delay||0);
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(vol||0.18,t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+0.02);
+}
+function soundWin(){ beep(660,0.12,'triangle',0.16,0); beep(880,0.14,'triangle',0.14,0.08); }
+function soundLose(){ beep(200,0.18,'sine',0.15,0); beep(150,0.22,'sine',0.13,0.08); }
+function soundJackpot(){
+  const notes=[523,659,784,1047,1319];
+  notes.forEach((f,i)=>beep(f,0.5,'triangle',0.18,i*0.09));
+  notes.forEach((f,i)=>beep(f*1.5,0.4,'sine',0.10,0.5+i*0.07));
+}
+$('muteBtn').onclick=function(){ muted=!muted; this.innerHTML=muted?'&#128263;':'&#128266;'; };
+
+/* ---------------- Confetti / coin FX ---------------- */
+const fxCanvas=$('fx'), ctx=fxCanvas.getContext('2d');
+let particles=[], rafOn=false;
+function sizeCanvas(){ fxCanvas.width=innerWidth; fxCanvas.height=innerHeight; }
+sizeCanvas(); addEventListener('resize',sizeCanvas);
+function spawnConfetti(n,gold){
+  for(let i=0;i<n;i++){
+    particles.push({
+      x:Math.random()*innerWidth, y:-20-Math.random()*innerHeight*0.3,
+      vx:(Math.random()-0.5)*4, vy:2+Math.random()*5,
+      size:6+Math.random()*8, rot:Math.random()*6.28, vr:(Math.random()-0.5)*0.3,
+      shape: gold && Math.random()<0.5 ? 'coin':'rect',
+      color: gold ? (Math.random()<0.6?'#e8c66a':'#c79a3c') :
+        ['#e8c66a','#3ad29f','#ff6b6b','#6aa0ff','#fff'][Math.floor(Math.random()*5)],
+      life:1
+    });
+  }
+  if(!rafOn){ rafOn=true; requestAnimationFrame(tick); }
+}
+function tick(){
+  ctx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
+  particles=particles.filter(p=>p.y<innerHeight+40 && p.life>0);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.rot+=p.vr;
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.fillStyle=p.color;
+    if(p.shape==='coin'){
+      ctx.beginPath(); ctx.arc(0,0,p.size*0.6,0,6.28); ctx.fill();
+      ctx.fillStyle='rgba(0,0,0,.18)'; ctx.beginPath(); ctx.arc(0,0,p.size*0.32,0,6.28); ctx.fill();
+    } else { ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*0.55); }
+    ctx.restore();
+  });
+  if(particles.length){ requestAnimationFrame(tick); } else { rafOn=false; ctx.clearRect(0,0,fxCanvas.width,fxCanvas.height); }
+}
+
+/* ---------------- State ---------------- */
+const S = {
+  name:"", id:"", phone:"", telegram:"", survey:{}, post:{},
+  balance: CONFIG.startingBalance, startBalance: CONFIG.startingBalance,
+  phase:"practice", turn:0, practiceTurn:0,
+  startTime:null, scoredStartTime:null, lastClickTime:null,
+  scoredTrials:[], practiceTrials:[],
+  deckCounts:{A:0,B:0,C:0,D:0},
+  wins:0, losses:0, totalEarned:0, totalLost:0, jackpots:0,
+  curWinStreak:0, maxWinStreak:0, curLossStreak:0, maxLossStreak:0,
+  curRunDeck:null, curRunLen:0, maxRun:{A:0,B:0,C:0,D:0},
+  switchAfterLoss:0, stayAfterLoss:0, switchAfter2plusLoss:0, stayAfter2plusLoss:0
+};
+
+/* ---------------- Once-only checks ---------------- */
+function deviceLocked(){ try{ return CONFIG.lockDeviceAfterPlay && localStorage.getItem('igt_device_locked')==='1'; }catch(e){ return false; } }
+function namePlayedLocally(n){ try{ const a=JSON.parse(localStorage.getItem('igt_played_names')||'[]'); return a.includes(norm(n)); }catch(e){ return false; } }
+function recordNameLocally(n){ try{ const a=JSON.parse(localStorage.getItem('igt_played_names')||'[]'); if(!a.includes(norm(n))){a.push(norm(n));} localStorage.setItem('igt_played_names',JSON.stringify(a)); }catch(e){} }
+if(deviceLocked()){ show('locked'); }
+
+function checkNameRemote(name){
+  return new Promise(resolve=>{
+    if(!CONFIG.backendUrl){ resolve({played:false, online:false}); return; }
+    const cb='igtcb_'+Date.now()+Math.floor(Math.random()*1000);
+    const s=document.createElement('script');
+    const to=setTimeout(()=>{ cleanup(); resolve({played:false, online:false}); },8000);
+    function cleanup(){ clearTimeout(to); try{delete window[cb];}catch(e){window[cb]=undefined;} if(s.parentNode)s.parentNode.removeChild(s); }
+    window[cb]=data=>{ cleanup(); resolve({played:!!(data&&data.played), online:true}); };
+    s.onerror=()=>{ cleanup(); resolve({played:false, online:false}); };
+    s.src=CONFIG.backendUrl+(CONFIG.backendUrl.indexOf('?')>-1?'&':'?')+'action=check&name='+encodeURIComponent(name)+'&callback='+cb;
+    document.body.appendChild(s);
+  });
+}
+
+/* ---------------- Screen 1: welcome / consent ---------------- */
+$('toSurvey').onclick=async function(){
+  const name=$('pName').value.trim();
+  const phone=$('pPhone').value.trim();
+  let telegram=$('pTelegram').value.trim();
+  if(telegram && telegram[0]!=='@') telegram='@'+telegram;   // normalise handle
+  const err=$('welcomeErr'); err.textContent='';
+  if(!$('consentChk').checked){ err.textContent='Please confirm you are 18+ and agree to take part.'; return; }
+  if(name.length<2){ err.textContent='Please enter your name.'; return; }
+  if(phone.length<6 && telegram.length<3){ err.textContent='Please give a contact: a phone number or a Telegram handle.'; return; }
+  if(namePlayedLocally(name) || deviceLocked()){ show('locked'); return; }
+  this.disabled=true; this.textContent='Checking…';
+  const res=await checkNameRemote(name);
+  this.disabled=false; this.textContent='Continue to survey';
+  if(res.played){ err.textContent='Our records show this name has already taken part. Each person may only play once.'; return; }
+  S.name=name; S.phone=phone; S.telegram=telegram; S.id=$('pId').value.trim();
+  ac(); // unlock audio on gesture
+  show('survey');
+};
+$('pName').addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();$('toSurvey').click();} });
+
+/* ---------------- Screen 2: survey submit ---------------- */
+$('toInstr').onclick=function(){
+  const r=collectSurvey();
+  const err=$('surveyErr');
+  if(!r.ok){ err.textContent=r.errs[0];
+    // scroll to give feedback
+    try{ err.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} return; }
+  err.textContent='';
+  S.survey=r.data;
+  show('instr'); checkScroll();
+};
+
+/* ---------------- Screen 3: instructions scroll gate ---------------- */
+const scrollbox=$('scrollbox');
+function checkScroll(){
+  const atBottom = scrollbox.scrollTop + scrollbox.clientHeight >= scrollbox.scrollHeight - 24;
+  if(atBottom){ $('beginBtn').disabled=false; $('scrollHint').style.display='none'; }
+}
+scrollbox.addEventListener('scroll',checkScroll);
+$('beginBtn').onclick=function(){ startPractice(); };
+
+/* ---------------- Build cards ---------------- */
+function buildCards(){
+  const wrap=$('cards'); wrap.innerHTML='';
+  DECK_ORDER.forEach(letter=>{
+    const d=DECKS[letter];
+    const b=document.createElement('button');
+    b.className='deck'; b.dataset.deck=letter;
+    b.innerHTML=
+      '<div class="cardface">'+
+        '<div class="corner tl"><div class="ltr">'+letter+'</div><div class="sm">'+d.suit+'</div></div>'+
+        '<div class="suit-big">'+d.suit+'</div>'+
+        '<div class="corner br"><div class="ltr">'+letter+'</div><div class="sm">'+d.suit+'</div></div>'+
+        '<div class="toast" id="toast-'+letter+'"></div>'+
+      '</div>'+
+      '<div class="meta"><div class="nm">CARD '+letter+'</div>'+
+        '<div class="row"><span class="win">Win +'+d.win+'</span><span class="lose">Lose −'+d.loss+'</span></div>'+
+      '</div>';
+    b.onclick=()=>pick(letter,b);
+    wrap.appendChild(b);
+  });
+}
+
+/* ---------------- Practice ---------------- */
+function startPractice(){
+  S.phase="practice"; S.practiceTurn=0; S.balance=CONFIG.startingBalance;
+  S.startTime=Date.now(); S.lastClickTime=Date.now();
+  buildCards();
+  $('phaseTag').className='phasetag practice'; $('phaseTag').textContent='Practice round (does not count)';
+  $('winCount').textContent=0; $('lossCount').textContent=0;
+  $('balanceFlash').textContent=fmt(S.balance);
+  $('progressbar').style.width='0%';
+  $('progressLabel').textContent='Practice turn 1 of '+CONFIG.practiceTrials;
+  show('game');
+}
+
+/* ---------------- Scored ---------------- */
+function startScored(){
+  S.phase="scored"; S.turn=0; S.balance=CONFIG.startingBalance; S.startBalance=CONFIG.startingBalance;
+  S.scoredStartTime=Date.now(); S.lastClickTime=Date.now();
+  S.scoredTrials=[]; S.deckCounts={A:0,B:0,C:0,D:0};
+  S.wins=0; S.losses=0; S.totalEarned=0; S.totalLost=0; S.jackpots=0;
+  S.curWinStreak=0; S.maxWinStreak=0; S.curLossStreak=0; S.maxLossStreak=0;
+  S.curRunDeck=null; S.curRunLen=0; S.maxRun={A:0,B:0,C:0,D:0};
+  S.switchAfterLoss=0; S.stayAfterLoss=0; S.switchAfter2plusLoss=0; S.stayAfter2plusLoss=0;
+  buildCards();
+  $('phaseTag').className='phasetag scored'; $('phaseTag').textContent='Real game (this counts!)';
+  $('winCount').textContent=0; $('lossCount').textContent=0;
+  $('balanceFlash').textContent=fmt(S.balance);
+  updateHUD();
+  show('game');
+}
+$('startScoredBtn').onclick=startScored;
+
+function updateHUD(){
+  $('winCount').textContent=S.wins;
+  $('lossCount').textContent=S.losses;
+  const pct=(S.turn/CONFIG.maxClicks)*100;
+  $('progressbar').style.width=pct+'%';
+  $('progressLabel').textContent = S.turn>=CONFIG.maxClicks ? 'Complete' : ('Turn '+(S.turn+1)+' of '+CONFIG.maxClicks);
+}
+
+/* ---------------- Core: pick a card ---------------- */
+let busy=false;
+function pick(letter,btn){
+  if(busy) return;
+  const d=DECKS[letter];
+  const isWin = Math.random() < d.pWin;
+  const delta = isWin ? d.win : -d.loss;
+
+  if(S.phase==="practice"){
+    if(S.practiceTurn>=CONFIG.practiceTrials) return;
+    busy=true;
+    const now=Date.now(); const rt=now-S.lastClickTime; S.lastClickTime=now;
+    S.balance+=delta; S.practiceTurn++;
+    S.practiceTrials.push({trial:S.practiceTurn, deck:letter, outcome:isWin?'win':'loss', amount:delta, balance:S.balance, rt_ms:rt});
+    flashBalance(delta); toast(letter,isWin,delta);
+    if(isWin && letter==='D'){ jackpot(); } else if(isWin){ soundWin(); spawnConfetti(d.win>=300?40:16,false); } else { soundLose(); }
+    const pct=(S.practiceTurn/CONFIG.practiceTrials)*100; $('progressbar').style.width=pct+'%';
+    $('progressLabel').textContent = S.practiceTurn>=CONFIG.practiceTrials ? 'Practice complete' : ('Practice turn '+(S.practiceTurn+1)+' of '+CONFIG.practiceTrials);
+    setTimeout(()=>{ busy=false; if(S.practiceTurn>=CONFIG.practiceTrials){ show('practiceDone'); } },650);
+    return;
+  }
+
+  // ----- scored -----
+  if(S.turn>=CONFIG.maxClicks) return;
+  busy=true;
+  const now=Date.now(); const rt=now-S.lastClickTime; S.lastClickTime=now;
+  const prevTrial=S.scoredTrials[S.scoredTrials.length-1];
+  const prevDeck=prevTrial?prevTrial.deck:null;
+  const prevWasLoss=prevTrial?(prevTrial.outcome==='loss'):false;
+  const prevLossStreakBefore=S.curLossStreak;
+
+  S.balance+=delta; S.turn++;
+  S.deckCounts[letter]++;
+  if(isWin){ S.wins++; S.totalEarned+=d.win; } else { S.losses++; S.totalLost+=d.loss; }
+  if(isWin && letter==='D'){ S.jackpots++; }
+  if(isWin){ S.curWinStreak++; S.curLossStreak=0; if(S.curWinStreak>S.maxWinStreak)S.maxWinStreak=S.curWinStreak; }
+  else { S.curLossStreak++; S.curWinStreak=0; if(S.curLossStreak>S.maxLossStreak)S.maxLossStreak=S.curLossStreak; }
+  if(S.curRunDeck===letter){ S.curRunLen++; } else { S.curRunDeck=letter; S.curRunLen=1; }
+  if(S.curRunLen>S.maxRun[letter]) S.maxRun[letter]=S.curRunLen;
+  if(prevWasLoss){
+    if(letter!==prevDeck) S.switchAfterLoss++; else S.stayAfterLoss++;
+    if(prevLossStreakBefore>=2){ if(letter!==prevDeck) S.switchAfter2plusLoss++; else S.stayAfter2plusLoss++; }
+  }
+  S.scoredTrials.push({
+    trial:S.turn, deck:letter, outcome:isWin?'win':'loss', amount:delta, balance:S.balance,
+    rt_ms:rt, risky:RISKY[letter], switchedFromPrev: prevDeck===null?'':(letter!==prevDeck)
+  });
+
+  flashBalance(delta); toast(letter,isWin,delta);
+  if(isWin && letter==='D'){ jackpot(); } else if(isWin){ soundWin(); spawnConfetti(d.win>=300?40:16,false); } else { soundLose(); }
+  updateHUD();
+  setTimeout(()=>{ busy=false; if(S.turn>=CONFIG.maxClicks){ endScored(); } },650);
+}
+
+function flashBalance(delta){
+  const el=$('balanceFlash');
+  el.textContent=fmt(S.balance);
+  el.style.color = delta>=0 ? 'var(--green)' : 'var(--red)';
+  el.style.transform='scale(1.18)';
+  setTimeout(()=>{ el.style.color='var(--gold)'; el.style.transform='scale(1)'; },300);
+}
+function toast(letter,isWin,delta){
+  const t=$('toast-'+letter);
+  t.textContent=(delta>=0?'+':'−')+fmt(Math.abs(delta));
+  t.className='toast '+(isWin?'win':'lose');
+  void t.offsetWidth; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1000);
+}
+function jackpot(){
+  soundJackpot();
+  $('flash').classList.add('show');
+  $('jackpotBanner').classList.add('show');
+  spawnConfetti(180,true);
+  setTimeout(()=>spawnConfetti(120,true),250);
+  setTimeout(()=>{ $('flash').classList.remove('show'); },650);
+  setTimeout(()=>{ $('jackpotBanner').classList.remove('show'); },1700);
+}
+
+/* ---------------- After scored round: post-task ---------------- */
+function endScored(){ show('posttask'); }
+$('toDebrief').onclick=function(){
+  const r=collectPostTask();
+  const err=$('postErr');
+  if(!r.ok){ err.textContent=r.errs[0]; return; }
+  err.textContent=''; S.post=r.data;
+  finalize();
+};
+
+/* ---------------- Behavioural measures + payload ---------------- */
+function computeMeasures(){
+  const t=S.scoredTrials, n=t.length;
+  let cd=0,dd=0;
+  t.forEach(x=>{ if(x.deck==='C'||x.deck==='D') cd++; if(x.deck==='D') dd++; });
+  const riskTaking = n? cd/n : '';
+  const jackpotPreference = n? dd/n : '';
+  let numLossRisky=0,denLoss=0,numWinRisky=0,denWin=0;
+  for(let i=1;i<n;i++){
+    const prev=t[i-1], cur=t[i]; const risky=(cur.deck==='C'||cur.deck==='D');
+    if(prev.outcome==='loss'){ denLoss++; if(risky)numLossRisky++; }
+    else { denWin++; if(risky)numWinRisky++; }
+  }
+  const pAfterLoss = denLoss? numLossRisky/denLoss : null;
+  const pAfterWin  = denWin?  numWinRisky/denWin  : null;
+  const lossChasing = (pAfterLoss!==null && pAfterWin!==null) ? (pAfterLoss-pAfterWin) : '';
+  return {
+    riskTaking: riskTaking===''?'':+riskTaking.toFixed(4),
+    jackpotPreference: jackpotPreference===''?'':+jackpotPreference.toFixed(4),
+    pRiskyAfterLoss: pAfterLoss===null?'':+pAfterLoss.toFixed(4),
+    pRiskyAfterWin: pAfterWin===null?'':+pAfterWin.toFixed(4),
+    lossChasing: lossChasing===''?'':+lossChasing.toFixed(4)
+  };
+}
+function computeEntries(){
+  // 1 base entry for completing + up to 3 bonus for token performance (max 4). Capped, per proposal.
+  const net=S.balance - S.startBalance;
+  let bonus=0;
+  if(S.balance>=3500) bonus=3; else if(S.balance>=3000) bonus=2; else if(S.balance>=2600) bonus=1; else bonus=0;
+  return {base:1, bonus:bonus, total:1+bonus, net:net};
+}
+function buildPayload(){
+  const durationSec=Math.round((Date.now()-S.startTime)/1000);
+  const scoredSec=Math.round((Date.now()-S.scoredStartTime)/1000);
+  const m=computeMeasures();
+  const e=computeEntries();
+  const base={
+    name:S.name, phone:S.phone, telegram:S.telegram, participantId:S.id,
+    timestamp:new Date().toISOString(),
+    startBalance:S.startBalance, finalBalance:S.balance, netResult:e.net,
+    entries:e.total, entriesBase:e.base, entriesBonus:e.bonus,
+    totalTurns:S.turn, durationSec:durationSec, scoredDurationSec:scoredSec,
+    wins:S.wins, losses:S.losses, totalEarned:S.totalEarned, totalLost:S.totalLost, jackpots:S.jackpots,
+    deckCount_A:S.deckCounts.A, deckCount_B:S.deckCounts.B, deckCount_C:S.deckCounts.C, deckCount_D:S.deckCounts.D,
+    maxConsecutive_A:S.maxRun.A, maxConsecutive_B:S.maxRun.B, maxConsecutive_C:S.maxRun.C, maxConsecutive_D:S.maxRun.D,
+    maxWinStreak:S.maxWinStreak, maxLossStreak:S.maxLossStreak,
+    switchedAfterLoss:S.switchAfterLoss, stayedAfterLoss:S.stayAfterLoss,
+    switchedAfter2plusLoss:S.switchAfter2plusLoss, stayedAfter2plusLoss:S.stayAfter2plusLoss,
+    riskTaking:m.riskTaking, jackpotPreference:m.jackpotPreference,
+    pRiskyAfterLoss:m.pRiskyAfterLoss, pRiskyAfterWin:m.pRiskyAfterWin, lossChasing:m.lossChasing,
+    choiceSequence:S.scoredTrials.map(t=>t.deck).join(""),
+    outcomeSequence:S.scoredTrials.map(t=>t.outcome==='win'?'W':'L').join(""),
+    trials:S.scoredTrials, practiceTrials:S.practiceTrials,
+    userAgent:navigator.userAgent
+  };
+  // flatten survey + post-task
+  Object.keys(S.survey).forEach(k=>{ base['sv_'+k]=S.survey[k]; });
+  Object.keys(S.post).forEach(k=>{ base[k]=S.post[k]; });
+  return base;
+}
+
+function saveLocal(payload){
+  try{ const all=JSON.parse(localStorage.getItem('igt_sessions')||'[]'); all.push(payload); localStorage.setItem('igt_sessions',JSON.stringify(all)); }catch(e){}
+}
+function submitRemote(payload){
+  if(!CONFIG.backendUrl) return Promise.resolve({sent:false});
+  return fetch(CONFIG.backendUrl,{ method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)
+  }).then(()=>({sent:true})).catch(()=>({sent:false}));
+}
+
+let lastPayload=null;
+function finalize(){
+  const p=buildPayload(); lastPayload=p;
+  if(CONFIG.lockDeviceAfterPlay) localStorage.setItem('igt_device_locked','1');
+  recordNameLocally(S.name);
+  saveLocal(p);
+  $('finalBalance').textContent=fmt(S.balance)+' tokens';
+  $('entries').textContent=p.entries+' lucky-draw '+(p.entries===1?'entry':'entries')+' ('+p.entriesBase+' base + '+p.entriesBonus+' bonus)';
+  let msg;
+  if(p.netResult>0) msg='You came out ahead by '+fmt(p.netResult)+' tokens. Nicely played!';
+  else if(p.netResult===0) msg='You finished exactly where you started.';
+  else msg='You finished '+fmt(Math.abs(p.netResult))+' tokens below where you began. The cards can be tricky!';
+  $('endMsg').textContent=msg;
+  show('end');
+  submitRemote(p).then(r=>{
+    $('submitStatus').textContent = r.sent ? 'Your result has been saved. ✅'
+      : (CONFIG.backendUrl ? 'Saved on this device (could not reach the server).' : 'Saved on this device.');
+  });
+}
+
+$('finishClose').onclick=function(){ window.open('','_self'); window.close(); show('locked'); };
+
+/* ---------------- Admin export ---------------- */
+function download(filename,text,type){
+  const blob=new Blob([text],{type:type||'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+}
+function sessionsToCsv(sessions){
+  const cols=new Set();
+  sessions.forEach(s=>Object.keys(s).forEach(k=>{ if(k!=='trials'&&k!=='practiceTrials') cols.add(k); }));
+  const arr=[...cols];
+  const escv=v=>{ if(typeof v==='object'&&v!==null) v=JSON.stringify(v); v=(v===undefined||v===null)?'':String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  let out=arr.join(',')+'\n';
+  sessions.forEach(s=>{ out+=arr.map(c=>escv(s[c])).join(',')+'\n'; });
+  return out;
+}
+function checkAdmin(){
+  const pass=$('adminPass').value;
+  if(pass!==CONFIG.adminPassword){ $('adminStatus').style.color='var(--red)'; $('adminStatus').textContent='Incorrect password.'; return false; }
+  return true;
+}
+$('adminCsv').onclick=function(){
+  if(!checkAdmin())return;
+  const all=JSON.parse(localStorage.getItem('igt_sessions')||'[]');
+  if(!all.length){ $('adminStatus').style.color='var(--red)'; $('adminStatus').textContent='No sessions stored on this device.'; return; }
+  download('igt_sessions.csv',sessionsToCsv(all),'text/csv');
+  $('adminStatus').style.color='var(--green)'; $('adminStatus').textContent=all.length+' session(s) exported as CSV.';
+};
+$('adminJson').onclick=function(){
+  if(!checkAdmin())return;
+  const all=JSON.parse(localStorage.getItem('igt_sessions')||'[]');
+  if(!all.length){ $('adminStatus').style.color='var(--red)'; $('adminStatus').textContent='No sessions stored on this device.'; return; }
+  download('igt_sessions.json',JSON.stringify(all,null,2),'application/json');
+  $('adminStatus').style.color='var(--green)'; $('adminStatus').textContent=all.length+' session(s) exported as JSON.';
+};
+$('adminResend').onclick=function(){
+  if(!checkAdmin())return;
+  if(!lastPayload){ $('adminStatus').textContent='Nothing to re-send.'; return; }
+  submitRemote(lastPayload).then(r=>{
+    $('adminStatus').style.color=r.sent?'var(--green)':'var(--red)';
+    $('adminStatus').textContent=r.sent?'Re-sent to email/sheet.':'Could not reach the server.';
+  });
+};
+
+/* ---------------- Motivational images side bar ---------------- */
+const MOTIV_IMAGES = [
+  "images/gambling.png","images/images.jpg","images/images.steamusercontent.jpg",
+  "images/wzrkzzch7kua1.jpg","images/seeing-memes-about-gambling-fills-me-with-an-indescriptible-v0-m0x5vzalgame1.webp",
+  "images/ad3pw80to09f1.jpeg"
+];
+(function(){
+  const box=$('motivImgs');
+  MOTIV_IMAGES.forEach(src=>{ const img=new Image(); img.alt=""; img.loading="lazy"; img.onerror=()=>img.remove(); img.src=src; box.appendChild(img); });
+  $('motivHd').onclick=()=>$('motivBar').classList.toggle('collapsed');
+  if(window.innerWidth<1300) $('motivBar').classList.add('collapsed');
+})();
+
+/* ---------------- Init ---------------- */
+buildSurvey();
+buildPostTask();
+</script>
+</body>
+</html>
