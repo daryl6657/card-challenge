@@ -804,23 +804,16 @@ const S = {
 
 /* ---------------- Once-only checks ---------------- */
 function deviceLocked(){ try{ return CONFIG.lockDeviceAfterPlay && localStorage.getItem('igt_device_locked')==='1'; }catch(e){ return false; } }
-function namePlayedLocally(n){ try{ const a=JSON.parse(localStorage.getItem('igt_played_names')||'[]'); return a.includes(norm(n)); }catch(e){ return false; } }
-function recordNameLocally(n){ try{ const a=JSON.parse(localStorage.getItem('igt_played_names')||'[]'); if(!a.includes(norm(n))){a.push(norm(n));} localStorage.setItem('igt_played_names',JSON.stringify(a)); }catch(e){} }
+/* Names are stored locally only as SHA-256 hashes, never in plain text,
+   so nobody using this device later can read who took part. */
+async function nameKey(n){ try{ return await sha256Hex(norm(n)); }catch(e){ return ''; } }
+async function namePlayedLocally(n){ try{ const k=await nameKey(n); if(!k) return false; const a=JSON.parse(localStorage.getItem('igt_played_names')||'[]'); return a.includes(k); }catch(e){ return false; } }
+async function recordNameLocally(n){ try{ const k=await nameKey(n); if(!k) return; const a=JSON.parse(localStorage.getItem('igt_played_names')||'[]'); if(!a.includes(k)){ a.push(k); localStorage.setItem('igt_played_names',JSON.stringify(a)); } }catch(e){} }
 if(deviceLocked()){ show('locked'); }
 
-function checkNameRemote(name){
-  return new Promise(resolve=>{
-    if(!CONFIG.backendUrl){ resolve({played:false, online:false}); return; }
-    const cb='igtcb_'+Date.now()+Math.floor(Math.random()*1000);
-    const s=document.createElement('script');
-    const to=setTimeout(()=>{ cleanup(); resolve({played:false, online:false}); },8000);
-    function cleanup(){ clearTimeout(to); try{delete window[cb];}catch(e){window[cb]=undefined;} if(s.parentNode)s.parentNode.removeChild(s); }
-    window[cb]=data=>{ cleanup(); resolve({played:!!(data&&data.played), online:true}); };
-    s.onerror=()=>{ cleanup(); resolve({played:false, online:false}); };
-    s.src=CONFIG.backendUrl+(CONFIG.backendUrl.indexOf('?')>-1?'&':'?')+'action=check&name='+encodeURIComponent(name)+'&callback='+cb;
-    document.body.appendChild(s);
-  });
-}
+/* The upfront server name-check was removed on purpose: it let anyone with
+   the backend URL ask whether a given person had taken part. Duplicates are
+   now rejected silently at submission time by the backend instead. */
 
 /* ---------------- Screen 1: welcome / consent ---------------- */
 $('toSurvey').onclick=async function(){
@@ -832,11 +825,7 @@ $('toSurvey').onclick=async function(){
   if(!$('consentChk').checked){ err.textContent='Please tick the consent box (18+, agree to take part and to anonymised data use).'; return; }
   if(name.length<2){ err.textContent='Please enter your name.'; return; }
   if(phone.length<6 && telegram.length<3){ err.textContent='Please give a contact: a phone number or a Telegram handle.'; return; }
-  if(namePlayedLocally(name) || deviceLocked()){ show('locked'); return; }
-  this.disabled=true; this.textContent='Checking…';
-  const res=await checkNameRemote(name);
-  this.disabled=false; this.textContent='Continue to survey';
-  if(res.played){ err.textContent='Our records show this name has already taken part. Each person may only play once.'; return; }
+  if(await namePlayedLocally(name) || deviceLocked()){ show('locked'); return; }
   S.name=name; S.phone=phone; S.telegram=telegram;
   ac(); // unlock audio on gesture
   show('survey');
@@ -1074,8 +1063,17 @@ function buildPayload(){
   return base;
 }
 
-function saveLocal(payload){
-  try{ const all=JSON.parse(localStorage.getItem('igt_sessions')||'[]'); all.push(payload); localStorage.setItem('igt_sessions',JSON.stringify(all)); }catch(e){}
+/* Local backup. If the session reached the server, the copy kept on this
+   device is stripped of name/phone/telegram so later users of a shared
+   computer cannot read participants' contact details. The full copy is kept
+   locally ONLY when the server could not be reached, so the lucky-draw
+   entry is not lost. */
+function saveLocal(payload, keepContact){
+  try{
+    const copy=Object.assign({},payload);
+    if(!keepContact){ copy.name='(submitted to server)'; delete copy.phone; delete copy.telegram; }
+    const all=JSON.parse(localStorage.getItem('igt_sessions')||'[]'); all.push(copy); localStorage.setItem('igt_sessions',JSON.stringify(all));
+  }catch(e){}
 }
 function submitRemote(payload){
   if(!CONFIG.backendUrl) return Promise.resolve({sent:false});
@@ -1088,8 +1086,7 @@ let lastPayload=null;
 function finalize(){
   const p=buildPayload(); lastPayload=p;
   if(CONFIG.lockDeviceAfterPlay) localStorage.setItem('igt_device_locked','1');
-  recordNameLocally(S.name);
-  saveLocal(p);
+  recordNameLocally(S.name);   // stores a hash only, fire-and-forget
   $('finalBalance').textContent=fmt(S.balance)+' tokens';
   $('entries').textContent=p.entries+' lucky-draw '+(p.entries===1?'entry':'entries')+' ('+p.entriesBase+' base + '+p.entriesBonus+' bonus)';
   let msg;
@@ -1099,6 +1096,7 @@ function finalize(){
   $('endMsg').textContent=msg;
   show('end');
   submitRemote(p).then(r=>{
+    saveLocal(p, !r.sent);   // keep contact info locally only if the server was unreachable
     $('submitStatus').textContent = r.sent ? 'Your result has been saved. ✅'
       : (CONFIG.backendUrl ? 'Saved on this device (could not reach the server).' : 'Saved on this device.');
   });

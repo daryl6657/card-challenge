@@ -6,7 +6,7 @@
  *    - VALIDATES every submission before saving (see SECURITY below)
  *    - Appends one row of data to a Google Sheet, aligned to the header
  *    - Emails you a readable summary of each result
- *    - Answers a name-check (GET, JSONP) so the same person cannot play twice
+ *    - Rejects duplicate names at submission time (no queryable name-check)
  *
  *  SECURITY (added after review):
  *    - Field whitelist: unknown fields are DROPPED, so nobody can inject
@@ -32,13 +32,15 @@
  ****************************************************************************/
 
 // ===== EDIT THIS LINE =====
-var EMAIL = "daryl6657@gmail.com";   // where each result is emailed
-var SHEET_NAME = "Responses";        // tab name inside the spreadsheet
+// Set your real address ONLY inside the Apps Script editor after pasting.
+// It is kept as a placeholder here so the public repository never reveals
+// the researcher's email address.
+var EMAIL = "PASTE_YOUR_EMAIL_HERE";   // where each result is emailed
+var SHEET_NAME = "Responses";          // tab name inside the spreadsheet
 // ==========================
 
 // Rate limits (per rolling window, whole deployment)
 var MAX_POSTS_PER_10MIN  = 30;   // finished sessions
-var MAX_CHECKS_PER_10MIN = 90;   // name checks
 var MAX_EMAILS_PER_HOUR  = 25;   // summary emails (rows are still saved past this)
 
 // Fields stored as JSON text (not spread across columns).
@@ -266,20 +268,15 @@ function doPost(e) {
   }
 }
 
-/* ---- GET: name check (JSONP) so a person cannot play twice ---- */
+/* ---- GET ----
+   The name-check lookup was REMOVED on purpose. It allowed anyone with this
+   URL to ask whether a named person had taken part in the study, which leaks
+   participation status. Duplicates are still blocked: doPost rejects any
+   submission whose name already has a row. This stub keeps the JSONP shape
+   so any cached old page still works, but it always answers "not played"
+   and reveals nothing. */
 function doGet(e) {
   var cb = (e.parameter.callback || "callback").replace(/[^a-zA-Z0-9_]/g, "");
-  var played = false;
-  try {
-    if ((e.parameter.action || "") === "check" &&
-        rateLimit_("rl_check", MAX_CHECKS_PER_10MIN, 600)) {
-      var name = (e.parameter.name || "").toString().slice(0, 60);
-      if (name.trim().length >= 2) {
-        played = nameExists_(getSheet_(), name);
-      }
-    }
-  } catch (err) { /* fail open: treat as not played */ }
-
-  var out = cb + "(" + JSON.stringify({ played: played }) + ");";
+  var out = cb + "(" + JSON.stringify({ played: false }) + ");";
   return ContentService.createTextOutput(out).setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
