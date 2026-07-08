@@ -247,14 +247,20 @@ a{color:var(--gold);}
       <div class="sec" style="border-top:none;margin-top:6px;padding-top:4px">
         <h3>Consent</h3>
         <p class="sechelp" style="font-size:13.5px;line-height:1.55;color:#c9cfdb">
-          This is a research activity for an Introduction to Psychology project. It studies how people make
-          choices under uncertainty. Taking part is <b>voluntary and anonymous</b>, you may stop at any time,
-          and you will <b>never wager or lose real money</b>. Tokens are points only. Your name and contact
-          details are used only to prevent duplicate entries and to contact you if you win the draw, and are kept
-          confidential by the research team.
+          This is a research study on how people make choices under uncertainty, conducted by student researchers
+          and supervising faculty from the <b>Singapore University of Technology and Design (SUTD)</b> and
+          <b>A*STAR</b>. Taking part is <b>voluntary</b>, you may stop at any time, and you will
+          <b>never wager or lose real money</b>. Tokens are points only. Your responses and game results may be
+          used in academic research and <b>published as part of a research paper</b>, always as
+          <b>anonymous, combined data</b>: your name, contact details, and anything that could identify you will
+          <b>never be published or shared</b>. Your name and contact are collected only to prevent duplicate
+          entries and to reach you if you win the draw; they are stored securely by the research team, kept
+          separate from your study answers, and not used for any other purpose. If you change your mind, you can
+          ask the research team to remove your data at any time before publication.
         </p>
         <label class="opt" style="margin-top:6px"><input type="checkbox" id="consentChk">
-          <span>I am <b>18 years or older</b>, I have read the above, and I agree to take part.</span></label>
+          <span>I am <b>18 years or older</b>, I have read and understood the above, and I freely consent to take
+          part and to my anonymised responses being used and published for research.</span></label>
       </div>
 
       <label class="field" for="pName">Your full name <span style="color:var(--red)">*</span> <span style="font-weight:400">(so we don't count you twice)</span></label>
@@ -263,9 +269,6 @@ a{color:var(--gold);}
       <label class="field">Contact <span style="color:var(--red)">*</span> <span style="font-weight:400">(so we can reach you if you win the draw. Give a phone number, a Telegram handle, or both.)</span></label>
       <input type="tel" id="pPhone" autocomplete="off" placeholder="Phone number, e.g. 9123 4567" maxlength="30">
       <input type="text" id="pTelegram" autocomplete="off" placeholder="Telegram handle, e.g. @jordantan" maxlength="40" style="margin-top:10px">
-
-      <label class="field" for="pId">Participant code <span style="font-weight:400">(optional)</span></label>
-      <input type="text" id="pId" autocomplete="off" placeholder="Leave blank if none" maxlength="40">
 
       <div class="err" id="welcomeErr"></div>
       <button class="btn block" id="toSurvey">Continue to survey</button>
@@ -373,6 +376,7 @@ a{color:var(--gold);}
         </table>
         <p>We are exploring whether people who have had more exposure to <b>gambling, gacha games, and loot boxes</b> show more gambling-like patterns: more risk-taking, more "chasing" losses, and a stronger pull toward jackpot-style rewards.</p>
         <p>The game was played <b>for points only</b>. You did not gamble or lose any real money. Also remember: in fixed-probability games a win is <b>not "due"</b> after a run of losses. Each turn is independent.</p>
+        <p>As noted in the consent form, your results may be included in a <b>published research paper</b> by the SUTD and A*STAR research team, always as <b>anonymous, combined data</b>. Your name and contact details will <b>never be published</b>; they are used only for the lucky draw and then discarded. If you change your mind about your data being used, you may ask the research team to remove it at any time before publication.</p>
         <div class="help-box">
           <b>If you ever feel concerned about your own gaming or spending:</b> support is available. In Singapore you can call the <b>National Problem Gambling Helpline 1800-6-668-668</b> (free, 24h), or reach out to your <b>university counselling service</b>. Elsewhere, contact your local responsible-gambling service.
         </div>
@@ -396,7 +400,7 @@ a{color:var(--gold);}
     </div>
   </section>
 
-  <p class="tiny center">Research activity &middot; Introduction to Psychology &middot; All data kept confidential.</p>
+  <p class="tiny center">Research study &middot; Introduction to Psychology &middot; SUTD &amp; A*STAR &middot; Results published as anonymous, combined data only.</p>
 </div>
 
 <script>
@@ -408,8 +412,10 @@ const CONFIG = {
   startingBalance : 2500,     // tokens each player starts with (proposal: 2,500)
   practiceTrials  : 5,        // unscored warm-up turns
   maxClicks       : 50,       // scored turns
-  adminPassword   : "gambling2026_!",   // <-- CHANGE THIS for the local CSV/JSON export.
-  researcherEmail : "daryl6657@gmail.com",
+  // SHA-256 hash of the researcher export password. The password itself is
+  // NOT stored anywhere in this file, so it cannot be read via view-source.
+  // To set a new password: hash it (e.g. sha256sum) and paste the hex here.
+  adminPasswordHash : "1b0edd9e7aaa1e7fb216997967277e327b9ba377e91b414ab20ccd2f5870dcad",
   // Paste your Google Apps Script Web App URL between the quotes (see SETUP_GUIDE).
   backendUrl      : "https://script.google.com/macros/s/AKfycbyQFDdXZbSFqvHfWUXHvLuiCNgLIBxV9CRrpPWrNPxnUNZdZP5xZ4Fx2I25x7W42z5h/exec",
   lockDeviceAfterPlay : true
@@ -823,7 +829,7 @@ $('toSurvey').onclick=async function(){
   let telegram=$('pTelegram').value.trim();
   if(telegram && telegram[0]!=='@') telegram='@'+telegram;   // normalise handle
   const err=$('welcomeErr'); err.textContent='';
-  if(!$('consentChk').checked){ err.textContent='Please confirm you are 18+ and agree to take part.'; return; }
+  if(!$('consentChk').checked){ err.textContent='Please tick the consent box (18+, agree to take part and to anonymised data use).'; return; }
   if(name.length<2){ err.textContent='Please enter your name.'; return; }
   if(phone.length<6 && telegram.length<3){ err.textContent='Please give a contact: a phone number or a Telegram handle.'; return; }
   if(namePlayedLocally(name) || deviceLocked()){ show('locked'); return; }
@@ -831,7 +837,7 @@ $('toSurvey').onclick=async function(){
   const res=await checkNameRemote(name);
   this.disabled=false; this.textContent='Continue to survey';
   if(res.played){ err.textContent='Our records show this name has already taken part. Each person may only play once.'; return; }
-  S.name=name; S.phone=phone; S.telegram=telegram; S.id=$('pId').value.trim();
+  S.name=name; S.phone=phone; S.telegram=telegram;
   ac(); // unlock audio on gesture
   show('survey');
 };
@@ -1044,7 +1050,7 @@ function buildPayload(){
   const m=computeMeasures();
   const e=computeEntries();
   const base={
-    name:S.name, phone:S.phone, telegram:S.telegram, participantId:S.id,
+    name:S.name, phone:S.phone, telegram:S.telegram,
     timestamp:new Date().toISOString(),
     startBalance:S.startBalance, finalBalance:S.balance, netResult:e.net,
     entries:e.total, entriesBase:e.base, entriesBonus:e.bonus,
@@ -1110,32 +1116,44 @@ function sessionsToCsv(sessions){
   const cols=new Set();
   sessions.forEach(s=>Object.keys(s).forEach(k=>{ if(k!=='trials'&&k!=='practiceTrials') cols.add(k); }));
   const arr=[...cols];
-  const escv=v=>{ if(typeof v==='object'&&v!==null) v=JSON.stringify(v); v=(v===undefined||v===null)?'':String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  const escv=v=>{ if(typeof v==='object'&&v!==null) v=JSON.stringify(v); v=(v===undefined||v===null)?'':String(v);
+    if(/^[=+\-@\t\r]/.test(v)) v="'"+v;   // block spreadsheet formula injection on import
+    return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
   let out=arr.join(',')+'\n';
   sessions.forEach(s=>{ out+=arr.map(c=>escv(s[c])).join(',')+'\n'; });
   return out;
 }
-function checkAdmin(){
-  const pass=$('adminPass').value;
-  if(pass!==CONFIG.adminPassword){ $('adminStatus').style.color='var(--red)'; $('adminStatus').textContent='Incorrect password.'; return false; }
+async function sha256Hex(str){
+  const buf=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+let adminTries=0;
+async function checkAdmin(){
+  if(adminTries>=5){ $('adminStatus').style.color='var(--red)'; $('adminStatus').textContent='Too many attempts. Reload the page to try again.'; return false; }
+  let hash='';
+  try{ hash=await sha256Hex($('adminPass').value); }catch(e){}
+  if(hash!==CONFIG.adminPasswordHash){
+    adminTries++;
+    $('adminStatus').style.color='var(--red)'; $('adminStatus').textContent='Incorrect password.'; return false;
+  }
   return true;
 }
-$('adminCsv').onclick=function(){
-  if(!checkAdmin())return;
+$('adminCsv').onclick=async function(){
+  if(!await checkAdmin())return;
   const all=JSON.parse(localStorage.getItem('igt_sessions')||'[]');
   if(!all.length){ $('adminStatus').style.color='var(--red)'; $('adminStatus').textContent='No sessions stored on this device.'; return; }
   download('igt_sessions.csv',sessionsToCsv(all),'text/csv');
   $('adminStatus').style.color='var(--green)'; $('adminStatus').textContent=all.length+' session(s) exported as CSV.';
 };
-$('adminJson').onclick=function(){
-  if(!checkAdmin())return;
+$('adminJson').onclick=async function(){
+  if(!await checkAdmin())return;
   const all=JSON.parse(localStorage.getItem('igt_sessions')||'[]');
   if(!all.length){ $('adminStatus').style.color='var(--red)'; $('adminStatus').textContent='No sessions stored on this device.'; return; }
   download('igt_sessions.json',JSON.stringify(all,null,2),'application/json');
   $('adminStatus').style.color='var(--green)'; $('adminStatus').textContent=all.length+' session(s) exported as JSON.';
 };
-$('adminResend').onclick=function(){
-  if(!checkAdmin())return;
+$('adminResend').onclick=async function(){
+  if(!await checkAdmin())return;
   if(!lastPayload){ $('adminStatus').textContent='Nothing to re-send.'; return; }
   submitRemote(lastPayload).then(r=>{
     $('adminStatus').style.color=r.sent?'var(--green)':'var(--red)';
