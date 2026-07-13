@@ -1,18 +1,22 @@
 # The Card Challenge
 
 A browser-based psychology study delivered as a single link. It runs the full
-procedure in order: consent → survey → practice round → 50-turn card game →
-post-task questions → debrief. The card game is a disguised
-Iowa-Gambling-style task, so participants behave naturally rather than guessing
-what is being measured. Each completed session is emailed to the researcher and
-written to a Google Sheet, and each person can take part only once.
+procedure in order: consent → practice round → 50-turn card game → survey →
+post-task questions → debrief. The survey deliberately comes after the game so
+that gambling-related questions cannot prime behaviour in the card task. The
+card game is a disguised Iowa-Gambling-style task with fixed, pre-generated
+reinforcement schedules (identical for every participant), so participants
+behave naturally and results are comparable across people. Compensation is a
+single lucky-draw entry for completion; game score does not affect it. Each
+completed session is emailed to the researcher and written to a Google Sheet,
+and each person can take part only once.
 
 ## Files
 
 | File | Purpose |
 |---|---|
 | `index.html` | The entire study (survey + game) in one self-contained page. This is what GitHub Pages hosts. |
-| `images/` | Card-game background and side-bar images. Must stay next to `index.html`. |
+| `images/` | Card-game background image. Must stay next to `index.html`. |
 | `google_apps_script.gs` | Free backend: stores each result in a Google Sheet, emails the researcher, blocks repeat players. |
 | `SETUP_GUIDE.md` | Step-by-step setup for the backend and for hosting on GitHub Pages. |
 

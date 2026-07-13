@@ -193,29 +193,12 @@ textarea{min-height:90px;resize:vertical;}
 .tiny{font-size:11px;color:var(--muted);margin-top:24px;line-height:1.5;}
 a{color:var(--gold);}
 
-#motivBar{position:fixed;left:0;top:64px;width:150px;max-height:82vh;z-index:50;
-  background:rgba(0,0,0,.6);border:1px solid var(--line);border-left:none;
-  border-radius:0 12px 12px 0;display:flex;flex-direction:column;overflow:hidden;}
-#motivBar .hd{font-size:10.5px;font-weight:700;letter-spacing:.4px;color:var(--gold);
-  padding:8px 6px;text-align:center;cursor:pointer;background:rgba(0,0,0,.45);user-select:none;}
-#motivImgs{overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:6px;}
-#motivImgs img{width:100%;border-radius:6px;display:block;}
-#motivBar.collapsed #motivImgs{display:none;}
-@media(max-width:1300px){#motivBar{width:120px;}}
-@media(max-width:760px){#motivBar{top:auto;bottom:0;left:0;right:0;width:100%;max-height:42vh;
-  border-radius:12px 12px 0 0;border-left:1px solid var(--line);}
-  #motivImgs{flex-direction:row;overflow-x:auto;overflow-y:hidden;}
-  #motivImgs img{width:auto;height:90px;}}
 </style>
 </head>
 <body>
 
 <button id="muteBtn" title="Mute / unmute sound">&#128266;</button>
 
-<aside id="motivBar">
-  <div class="hd" id="motivHd">MOTIVATIONAL IMAGES &#9662;</div>
-  <div id="motivImgs"></div>
-</aside>
 <canvas id="fx"></canvas>
 <div class="screenflash" id="flash"></div>
 <div id="jackpotBanner"><div class="jp-text script">Jackpot</div><div class="jp-sub">+1,000 TOKENS!</div></div>
@@ -236,11 +219,11 @@ a{color:var(--gold);}
   <section class="screen active" id="welcome">
     <div class="center">
       <h1 class="title script">The Card Challenge</h1>
-      <p class="subtitle">A short decision study &middot; survey + card game &middot; lucky-draw entry</p>
+      <p class="subtitle">A short decision study &middot; card game + survey &middot; lucky-draw entry</p>
     </div>
     <div class="card-panel">
       <p style="color:#d7dbe6;font-size:15px;line-height:1.6;text-align:center;margin:0 0 10px">
-        You will answer a <b>short survey</b>, then play a <b>card game</b> with tokens.
+        You will play a <b>card game</b> with tokens, then answer a <b>short survey</b>.
         Finishing earns you an entry into a draw for a <b style="color:var(--gold)">$30 voucher</b>.
       </p>
 
@@ -259,21 +242,21 @@ a{color:var(--gold);}
           instructor</b>, the researchers, SUTD, or A*STAR.
         </p>
         <p class="sechelp" style="font-size:13.5px;line-height:1.55;color:#c9cfdb">
-          <b>What is involved.</b> You will complete a short survey followed by a card game played for tokens.
+          <b>What is involved.</b> You will play a card game for tokens, followed by a short survey.
           You will <b>never wager, deposit, or lose real money</b>; tokens are points with no monetary value.
           The study involves <b>no more than minimal risk</b>. To avoid influencing your behaviour, some details
           of the study's specific research questions are withheld until the end; a <b>full explanation is
-          provided on the final screen</b>. Completing the study earns one entry into a draw for a $30 voucher,
-          with up to three bonus entries based on game performance.
+          provided on the final screen</b>. Everyone who completes the study receives <b>one entry</b> into a
+          draw for a $30 voucher. Your game score does not affect your entry.
         </p>
         <p class="sechelp" style="font-size:13.5px;line-height:1.55;color:#c9cfdb">
           <b>Confidentiality and data use.</b> Your responses and game results may be analysed and
           <b>published in academic research</b> only as <b>anonymised, aggregated data</b>. Your name, contact
-          details, and any information that could identify you will <b>never be published or disclosed to third
-          parties</b>. Your name and contact details are collected solely to prevent duplicate participation and
-          to administer the lucky draw; they are stored securely, kept separate from your study responses, used
-          for no other purpose, and <b>securely deleted once the draw has concluded</b>, in accordance with the
-          Personal Data Protection Act 2012.
+          details, and any information that could identify you will <b>never appear in any publication, report,
+          or shared dataset, and will never be disclosed to third parties</b>. Your name and contact details are
+          collected solely to prevent duplicate participation and to administer the lucky draw; they are stored
+          securely, accessible only to the research team, used for no other purpose, and <b>securely deleted
+          once the draw has concluded</b>, in accordance with the Personal Data Protection Act 2012.
         </p>
         <p class="sechelp" style="font-size:13.5px;line-height:1.55;color:#c9cfdb">
           <b>Withdrawal of data.</b> You may request that your data be removed at any time before the anonymised
@@ -295,14 +278,14 @@ a{color:var(--gold);}
       <input type="text" id="pTelegram" autocomplete="off" placeholder="Telegram handle, e.g. @jordantan" maxlength="40" style="margin-top:10px">
 
       <div class="err" id="welcomeErr"></div>
-      <button class="btn block" id="toSurvey">Continue to survey</button>
+      <button class="btn block" id="toSurvey">Continue</button>
     </div>
   </section>
 
   <!-- ============ SCREEN 2: SURVEY ============ -->
   <section class="screen" id="survey">
     <div class="card-panel">
-      <h1 class="title script center" style="font-size:clamp(30px,6vw,48px)">A few questions first</h1>
+      <h1 class="title script center" style="font-size:clamp(30px,6vw,48px)">A few questions about you</h1>
       <p class="progresstiny">Please answer honestly. There are no right or wrong answers. Questions marked <span style="color:var(--red)">*</span> are required.</p>
       <form id="surveyForm" autocomplete="off"><!-- survey injected by JS --></form>
       <div class="err" id="surveyErr"></div>
@@ -330,7 +313,7 @@ a{color:var(--gold);}
         <h3>Practice, then the real game</h3>
         <p>First you get a <b>short practice round</b> to try the cards out, and it does <b>not</b> count. After that, your tokens reset to 2,500 and the <b>real game of 50 turns</b> begins. A bar at the top shows how many turns you have left.</p>
         <h3>Your reward</h3>
-        <p>Completing the study gives you <b>1 lucky-draw entry</b>. Doing well in the game can earn up to <b>3 bonus entries</b> (4 max), so it is worth trying to finish with as many tokens as you can.</p>
+        <p>Everyone who completes the study receives <b>1 lucky-draw entry</b>, no matter how the game goes. Your score does not change your entry, so just play the game as it comes: try to finish with as many tokens as you can.</p>
         <h3>A few notes</h3>
         <ul>
           <li>Just choose what feels best to you.</li>
@@ -363,7 +346,7 @@ a{color:var(--gold);}
     <div class="card-panel center">
       <h1 class="title script" style="font-size:clamp(34px,7vw,56px)">Practice complete</h1>
       <p class="subtitle">Now for the real thing.</p>
-      <p style="color:#d7dbe6;font-size:15px;line-height:1.6">Your tokens now reset to <b style="color:var(--gold)">2,500</b>. The next <b>50 turns count</b>. They decide your final score and your bonus lucky-draw entries. Play to win!</p>
+      <p style="color:#d7dbe6;font-size:15px;line-height:1.6">Your tokens now reset to <b style="color:var(--gold)">2,500</b>. The next <b>50 turns count</b>. They decide your final score. Try to finish with as many tokens as you can!</p>
       <button class="btn block" id="startScoredBtn">Start the real game</button>
     </div>
   </section>
@@ -455,6 +438,28 @@ const DECKS = {
   B:{ suit:"♠", win:120,  loss:100, pWin:0.50 },  // spades
   C:{ suit:"♦", win:300,  loss:150, pWin:0.30 },  // diamonds
   D:{ suit:"♣", win:1000, loss:150, pWin:0.10 }   // clubs
+};
+
+/* FIXED reinforcement schedules (standard IGT practice): every participant
+   experiences the SAME pre-generated outcome sequence per deck, so results
+   are comparable across people and an early lucky jackpot cannot distort a
+   participant's deck preference for random reasons. Each consecutive block
+   of 10 draws from a deck contains exactly the advertised number of wins
+   (A 8/10, B 5/10, C 3/10, D 1/10). Sequences were generated once with a
+   seeded shuffle. Practice uses separate schedules so the warm-up does not
+   reveal the start of the scored sequence. The nth draw FROM A GIVEN DECK
+   reads position n of that deck's schedule (wrapping if ever exceeded). */
+const SCHEDULES = {
+  A: "WWWWLWWWLWWWWWLWWWLWWWWWWWWLWLWLLWWWWWWWWWLWWLWWWW",
+  B: "LLWWWLWWLLLLLWWWWWLLLWWWLLLLWWWWWLLWLLLWWLWWLWLLLW",
+  C: "LLLLLWLWLWLWWLLWLLLLLLLLWLLLWWLWLLLLWWLLLWWLWLLLLL",
+  D: "LLLLWLLLLLLLLLLLLLLWLLLWLLLLLLWLLLLLLLLLLLWLLLLLLL"
+};
+const PRACTICE_SCHEDULES = {
+  A: "WWWWWLWWLW",
+  B: "LWWWLWWLLL",
+  C: "WWLLLLWLLL",
+  D: "LWLLLLLLLL"
 };
 const DECK_ORDER = ["A","B","C","D"];
 const RISKY = {A:false,B:false,C:true,D:true};   // C or D = "risky" choice
@@ -820,6 +825,7 @@ const S = {
   startTime:null, scoredStartTime:null, lastClickTime:null,
   scoredTrials:[], practiceTrials:[],
   deckCounts:{A:0,B:0,C:0,D:0},
+  deckDraws:{A:0,B:0,C:0,D:0}, practiceDeckDraws:{A:0,B:0,C:0,D:0},
   wins:0, losses:0, totalEarned:0, totalLost:0, jackpots:0,
   curWinStreak:0, maxWinStreak:0, curLossStreak:0, maxLossStreak:0,
   curRunDeck:null, curRunLen:0, maxRun:{A:0,B:0,C:0,D:0},
@@ -852,11 +858,13 @@ $('toSurvey').onclick=async function(){
   if(await namePlayedLocally(name) || deviceLocked()){ show('locked'); return; }
   S.name=name; S.phone=phone; S.telegram=telegram;
   ac(); // unlock audio on gesture
-  show('survey');
+  // Game first, survey after: keeps gambling-related questions from priming
+  // behaviour in the card task (the primary outcome).
+  show('instr'); checkScroll();
 };
 $('pName').addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();$('toSurvey').click();} });
 
-/* ---------------- Screen 2: survey submit ---------------- */
+/* ---------------- Survey submit (shown AFTER the scored game) ---------------- */
 $('toInstr').onclick=function(){
   const r=collectSurvey();
   const err=$('surveyErr');
@@ -865,7 +873,7 @@ $('toInstr').onclick=function(){
     try{ err.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){} return; }
   err.textContent='';
   S.survey=r.data;
-  show('instr'); checkScroll();
+  show('posttask');
 };
 
 /* ---------------- Screen 3: instructions scroll gate ---------------- */
@@ -902,6 +910,7 @@ function buildCards(){
 /* ---------------- Practice ---------------- */
 function startPractice(){
   S.phase="practice"; S.practiceTurn=0; S.balance=CONFIG.startingBalance;
+  S.practiceDeckDraws={A:0,B:0,C:0,D:0};
   S.startTime=Date.now(); S.lastClickTime=Date.now();
   buildCards();
   $('phaseTag').className='phasetag practice'; $('phaseTag').textContent='Practice round (does not count)';
@@ -916,7 +925,7 @@ function startPractice(){
 function startScored(){
   S.phase="scored"; S.turn=0; S.balance=CONFIG.startingBalance; S.startBalance=CONFIG.startingBalance;
   S.scoredStartTime=Date.now(); S.lastClickTime=Date.now();
-  S.scoredTrials=[]; S.deckCounts={A:0,B:0,C:0,D:0};
+  S.scoredTrials=[]; S.deckCounts={A:0,B:0,C:0,D:0}; S.deckDraws={A:0,B:0,C:0,D:0};
   S.wins=0; S.losses=0; S.totalEarned=0; S.totalLost=0; S.jackpots=0;
   S.curWinStreak=0; S.maxWinStreak=0; S.curLossStreak=0; S.maxLossStreak=0;
   S.curRunDeck=null; S.curRunLen=0; S.maxRun={A:0,B:0,C:0,D:0};
@@ -943,7 +952,12 @@ let busy=false;
 function pick(letter,btn){
   if(busy) return;
   const d=DECKS[letter];
-  const isWin = Math.random() < d.pWin;
+  // Outcome comes from the deck's fixed schedule, indexed by how many times
+  // THIS participant has drawn from this deck in the current phase.
+  const sched = (S.phase==="practice") ? PRACTICE_SCHEDULES[letter] : SCHEDULES[letter];
+  const draws = (S.phase==="practice") ? S.practiceDeckDraws : S.deckDraws;
+  const isWin = sched[draws[letter] % sched.length] === 'W';
+  draws[letter]++;
   const delta = isWin ? d.win : -d.loss;
 
   if(S.phase==="practice"){
@@ -1016,8 +1030,8 @@ function jackpot(){
   setTimeout(()=>{ $('jackpotBanner').classList.remove('show'); },1700);
 }
 
-/* ---------------- After scored round: post-task ---------------- */
-function endScored(){ show('posttask'); }
+/* ---------------- After scored round: survey, then post-task ---------------- */
+function endScored(){ show('survey'); }
 $('toDebrief').onclick=function(){
   const r=collectPostTask();
   const err=$('postErr');
@@ -1051,11 +1065,12 @@ function computeMeasures(){
   };
 }
 function computeEntries(){
-  // 1 base entry for completing + up to 3 bonus for token performance (max 4). Capped, per proposal.
+  // Completion-only compensation: exactly 1 entry for finishing, regardless of
+  // score. Performance-based bonus entries were removed because they reward
+  // safe play and distort the risk-taking behaviour the study measures, and
+  // they tie a monetary incentive to gambling-like outcomes.
   const net=S.balance - S.startBalance;
-  let bonus=0;
-  if(S.balance>=3500) bonus=3; else if(S.balance>=3000) bonus=2; else if(S.balance>=2600) bonus=1; else bonus=0;
-  return {base:1, bonus:bonus, total:1+bonus, net:net};
+  return {base:1, bonus:0, total:1, net:net};
 }
 function buildPayload(){
   const durationSec=Math.round((Date.now()-S.startTime)/1000);
@@ -1112,7 +1127,7 @@ function finalize(){
   if(CONFIG.lockDeviceAfterPlay) localStorage.setItem('igt_device_locked','1');
   recordNameLocally(S.name);   // stores a hash only, fire-and-forget
   $('finalBalance').textContent=fmt(S.balance)+' tokens';
-  $('entries').textContent=p.entries+' lucky-draw '+(p.entries===1?'entry':'entries')+' ('+p.entriesBase+' base + '+p.entriesBonus+' bonus)';
+  $('entries').textContent=p.entries+' lucky-draw '+(p.entries===1?'entry':'entries');
   let msg;
   if(p.netResult>0) msg='You came out ahead by '+fmt(p.netResult)+' tokens. Nicely played!';
   else if(p.netResult===0) msg='You finished exactly where you started.';
@@ -1182,19 +1197,6 @@ $('adminResend').onclick=async function(){
     $('adminStatus').textContent=r.sent?'Re-sent to email/sheet.':'Could not reach the server.';
   });
 };
-
-/* ---------------- Motivational images side bar ---------------- */
-const MOTIV_IMAGES = [
-  "images/gambling.png","images/images.jpg","images/images.steamusercontent.jpg",
-  "images/wzrkzzch7kua1.jpg","images/seeing-memes-about-gambling-fills-me-with-an-indescriptible-v0-m0x5vzalgame1.webp",
-  "images/ad3pw80to09f1.jpeg"
-];
-(function(){
-  const box=$('motivImgs');
-  MOTIV_IMAGES.forEach(src=>{ const img=new Image(); img.alt=""; img.loading="lazy"; img.onerror=()=>img.remove(); img.src=src; box.appendChild(img); });
-  $('motivHd').onclick=()=>$('motivBar').classList.toggle('collapsed');
-  if(window.innerWidth<1300) $('motivBar').classList.add('collapsed');
-})();
 
 /* ---------------- Init ---------------- */
 buildSurvey();
