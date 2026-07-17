@@ -415,6 +415,17 @@ a{color:var(--gold);}
    ============================  CONFIG  ===================================
    Edit the values in this block, then save the file.
    ========================================================================= */
+/* Identifies which build a participant played. It is written into every export.
+   BUMP THIS whenever you change the payoff table, the outcome mechanism, the
+   trial counts, or the order of the survey and the game. Without it there is no
+   way to tell from the data which version someone saw, which is exactly how the
+   v1/v2 split went unnoticed for two weeks and had to be recovered by replaying
+   3,850 logged trials against the source. History:
+     v1  (until 2026-07-15) independent draws     -- n=52, matches the proposal
+     v2  (2026-07-16..17)   fixed schedules       -- n=25, does NOT match, see FINDINGS.md
+     v3  (2026-07-17 on)    independent draws restored */
+const BUILD_ID = "v3-independent-draws-2026-07-17";
+
 const CONFIG = {
   startingBalance : 2500,     // tokens each player starts with (proposal: 2,500)
   practiceTrials  : 5,        // unscored warm-up turns
@@ -440,27 +451,30 @@ const DECKS = {
   D:{ suit:"♣", win:1000, loss:150, pWin:0.10 }   // clubs
 };
 
-/* FIXED reinforcement schedules (standard IGT practice): every participant
-   experiences the SAME pre-generated outcome sequence per deck, so results
-   are comparable across people and an early lucky jackpot cannot distort a
-   participant's deck preference for random reasons. Each consecutive block
-   of 10 draws from a deck contains exactly the advertised number of wins
-   (A 8/10, B 5/10, C 3/10, D 1/10). Sequences were generated once with a
-   seeded shuffle. Practice uses separate schedules so the warm-up does not
-   reveal the start of the scored sequence. The nth draw FROM A GIVEN DECK
-   reads position n of that deck's schedule (wrapping if ever exceeded). */
-const SCHEDULES = {
-  A: "WWWWLWWWLWWWWWLWWWLWWWWWWWWLWLWLLWWWWWWWWWLWWLWWWW",
-  B: "LLWWWLWWLLLLLWWWWWLLLWWWLLLLWWWWWLLWLLLWWLWWLWLLLW",
-  C: "LLLLLWLWLWLWWLLWLLLLLLLLWLLLWWLWLLLLWWLLLWWLWLLLLL",
-  D: "LLLLWLLLLLLLLLLLLLLWLLLWLLLLLLWLLLLLLLLLLLWLLLLLLL"
-};
-const PRACTICE_SCHEDULES = {
-  A: "WWWWWLWWLW",
-  B: "LWWWLWWLLL",
-  C: "WWLLLLWLLL",
-  D: "LWLLLLLLLL"
-};
+/* INDEPENDENT DRAWS AT FIXED PROBABILITIES.
+   Every turn is an independent Bernoulli draw at the deck's pWin above. This
+   is what the proposal specifies ("80% chance +50, 20% chance -50"), and it is
+   the only implementation consistent with two things the study itself says:
+
+     - the debrief tells participants "Each turn is independent";
+     - probability item 2 marks "Exactly 10%" correct for the next try after
+       nine losses at a fixed 10% chance.
+
+   A previous build used fixed pre-generated schedules (one hard-coded W/L
+   string per deck, one win per block of 10). That is standard IGT practice and
+   defensible on its own terms, but it made turns DEPENDENT: after nine losses
+   on deck D within a block the tenth was guaranteed, so the gambler's fallacy
+   was literally true, the debrief's independence claim was false, and probability
+   item 2 was scored against the wrong key. It also fixed the practice-round D
+   win at the 2nd pull, which handed 76% of participants a +1000 jackpot before
+   the scored round rather than preventing early lucky jackpots as intended.
+   Data collected under that build is cohort v2 (2026-07-16 onward, n=25) and is
+   not poolable with the independent-draw cohort for any deck-D or token-balance
+   measure. See CODEBOOK.md and FINDINGS.md.
+
+   If you deliberately want fixed schedules, change the proposal, the debrief
+   text, and the probability item together, and bump BUILD_ID. Do not change one
+   without the others. */
 const DECK_ORDER = ["A","B","C","D"];
 const RISKY = {A:false,B:false,C:true,D:true};   // C or D = "risky" choice
 /* ===================  END CONFIG (edit nothing below) =================== */
@@ -952,12 +966,11 @@ let busy=false;
 function pick(letter,btn){
   if(busy) return;
   const d=DECKS[letter];
-  // Outcome comes from the deck's fixed schedule, indexed by how many times
-  // THIS participant has drawn from this deck in the current phase.
-  const sched = (S.phase==="practice") ? PRACTICE_SCHEDULES[letter] : SCHEDULES[letter];
+  // Independent draw at this deck's fixed probability. No memory of previous
+  // turns: a win is never "due". See the CONFIG note above before changing this.
+  const isWin = Math.random() < d.pWin;
   const draws = (S.phase==="practice") ? S.practiceDeckDraws : S.deckDraws;
-  const isWin = sched[draws[letter] % sched.length] === 'W';
-  draws[letter]++;
+  draws[letter]++;   // retained for diagnostics; no longer drives the outcome
   const delta = isWin ? d.win : -d.loss;
 
   if(S.phase==="practice"){
@@ -1094,7 +1107,8 @@ function buildPayload(){
     choiceSequence:S.scoredTrials.map(t=>t.deck).join(""),
     outcomeSequence:S.scoredTrials.map(t=>t.outcome==='win'?'W':'L').join(""),
     trials:S.scoredTrials, practiceTrials:S.practiceTrials,
-    userAgent:navigator.userAgent
+    userAgent:navigator.userAgent,
+    buildId:BUILD_ID
   };
   // flatten survey + post-task
   Object.keys(S.survey).forEach(k=>{ base['sv_'+k]=S.survey[k]; });
